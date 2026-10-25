@@ -59,8 +59,8 @@
   --font: "ABC Monument Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
 
   /* Figma measurements: start (p = 0) → collapsed header (p = 1) */
-  --margin: calc(30 * var(--u));
-  --gap: calc((20 - 12 * var(--p)) * var(--u));         /* 20 → 8   */
+  --margin: calc(15 * var(--u));                        /* page side margin (was 30 in Figma) */
+  --gap: calc((10 - 5 * var(--p)) * var(--u));          /* 10 → 5   */
   --card-min: calc((155 - 95 * var(--p)) * var(--u));   /* 155 → 60 */
   --media-open: 0.656;                                  /* 323/492 and 621/947 */
   --media-closed: calc(0.656 - 0.472 * var(--p));       /* 0.656 → 0.184 */
@@ -107,7 +107,7 @@ a { color: inherit; text-decoration: none; }
 
 .statement {
   position: absolute;
-  left: calc(32 * var(--u));
+  left: calc(var(--margin) + 2 * var(--u));
   top: var(--statement-top, 283px);
   width: calc(853 * var(--u));
   margin: 0;
@@ -120,17 +120,29 @@ a { color: inherit; text-decoration: none; }
   opacity: clamp(0, 1 - var(--p) * 2.2, 1);
 }
 
+/* The bunny is taller than a line of text, so it sits in a zero-height slot
+   that only reserves its width, and is drawn over the text. Line spacing
+   stays even across all three lines. */
+.bunny-slot {
+  display: inline-block;
+  position: relative;
+  width: 3.38em;           /* bunny width: 217 / 88 × 1.37em */
+  height: 0;               /* adds nothing to the line height */
+  margin: 0 0.05em;
+}
+
 .bunny {
+  position: absolute;
+  left: 0;
+  bottom: -0.42em;         /* slot bottom = text baseline */
   height: 1.37em;
   width: auto;
-  vertical-align: -0.42em;
-  margin: 0 0.05em;
 }
 
 .nav {
   position: absolute;
   top: calc(25 * var(--u));
-  right: calc(20 * var(--u));
+  right: calc(var(--margin) - 10 * var(--u));
   display: flex;
   font-size: max(15px, calc(20 * var(--u)));
 }
@@ -163,13 +175,24 @@ a { color: inherit; text-decoration: none; }
   container-type: inline-size;
   transition: --a var(--dur) var(--ease);
   outline-offset: 4px;
+
+  /* share of the card's height taken by the main image */
+  --media-frac: calc(var(--media-closed) + var(--a) * (var(--media-open) - var(--media-closed)));
+
+  /* each card scrolls on its own, but only once the header has collapsed */
+  overflow-y: hidden;
+  scrollbar-width: none;
 }
+
+.card::-webkit-scrollbar { display: none; }
+
+body.is-collapsed .card { overflow-y: auto; }
 
 .card.is-open { --a: 1; }
 
 .card__media {
   flex: none;
-  height: calc((var(--media-closed) + var(--a) * (var(--media-open) - var(--media-closed))) * 100%);
+  height: calc(var(--media-frac) * 100%);
   background: var(--media);
   overflow: hidden;
   position: relative;
@@ -187,14 +210,15 @@ a { color: inherit; text-decoration: none; }
   position: absolute;
   left: 10px;
   bottom: 8px;
-  font-size: 11px;
+  font-size: clamp(8px, 7.1cqi, 11px);
   color: #8a8a8a;
   white-space: nowrap;
 }
 
 .card__info {
-  flex: 1;
-  min-height: 0;
+  /* fills the rest of the visible card; extra content scrolls in below */
+  flex: none;
+  height: calc((1 - var(--media-frac)) * 100% - 15 * var(--u));
   margin-top: calc(15 * var(--u));
   display: grid;
   grid-template-columns: 1fr;
@@ -206,22 +230,24 @@ a { color: inherit; text-decoration: none; }
 /* Text placeholders: light gray boxes, as in the Figma draft */
 .text-box {
   background: var(--text-box);
-  padding: 10px;
+  padding: clamp(3px, 6.5cqi, 10px);
   min-width: 0;
   overflow: hidden;
-  font-size: 13px;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  font-size: clamp(8px, 8.4cqi, 13px);
   line-height: 1.35;
 }
 
 .text-box h2 {
   margin: 0 0 6px;
-  font-size: 17px;
+  font-size: clamp(8px, 11cqi, 17px);
   font-weight: 400;
   line-height: 1.1;
 }
 
 .text-box p { margin: 0; }
-.text-box .label { color: #8a8a8a; font-size: 11px; margin-bottom: 4px; }
+.text-box .label { color: #8a8a8a; font-size: clamp(8px, 7.1cqi, 11px); margin-bottom: 4px; }
 
 /* Only the summary box shows while a card is narrow */
 .text-box--meta { display: none; }
@@ -237,10 +263,48 @@ a { color: inherit; text-decoration: none; }
   .text-box--meta { display: block; }
 }
 
-/* Too narrow to read: hide text, keep the empty frame (like the 60px columns in Figma) */
-@container (max-width: 110px) {
-  .card__info { opacity: 0; }
+/* ---------- scrollable project content (lorem placeholders for now) ---------- */
+
+.card__more {
+  flex: none;
+  display: grid;
+  gap: calc(12 * var(--u));
+  margin-top: calc(12 * var(--u));
+  padding-bottom: calc(12 * var(--u));
+  transition: opacity 0.3s;
 }
+
+.card__more .text-box p + p { margin-top: 0.8em; }
+
+.more__media {
+  background: var(--media);
+  aspect-ratio: 16 / 9;
+  position: relative;
+}
+
+.more__media--tall { aspect-ratio: 4 / 5; }
+
+.more__media .placeholder-label {
+  position: absolute;
+  left: 10px;
+  bottom: 8px;
+  font-size: clamp(8px, 7.1cqi, 11px);
+  color: #8a8a8a;
+  white-space: nowrap;
+}
+
+.more__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: calc(12 * var(--u));
+}
+
+@container (min-width: 420px) {
+  .more__row { grid-template-columns: 1fr 1fr; }
+}
+
+/* Narrow cards keep their text: sizes above scale down with the card's width
+   (cqi = 1% of the card's width) and never go below 8px (6pt). Full size from 155px up. */
 
 /* ---------- gutter guides (press "g") ---------- */
 
@@ -278,9 +342,10 @@ body.show-guides .projects { outline: 1px dashed var(--guide); }
     padding: 16px;
   }
 
-  .card { flex: none; }
+  .card { flex: none; overflow: visible; }
   .card__media { height: auto; aspect-ratio: 4 / 3; }
-  .card__info { opacity: 1; }
+  .card__info { height: auto; opacity: 1; }
+  .card__more { display: none; } /* long project content lives on project pages on phones */
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -18,6 +18,36 @@ const projectsEl = document.querySelector(".projects");
 
 // ---------- render cards ----------
 
+// Dummy long-form content shown when you scroll inside a card.
+// Replace with real project writing and media later.
+const LOREM = [
+  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+  "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+  "Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida.",
+  "Praesent elementum hendrerit tortor. Sed semper lorem at felis. Vestibulum volutpat, lacus a ultrices sagittis, mi neque euismod dui, eu pulvinar nunc sapien ornare nisl. Phasellus pede arcu, dapibus eu, fermentum et, dapibus sed, urna.",
+];
+
+function moreHTML() {
+  const box = (label, paras) =>
+    `<div class="text-box"><p class="label">${label}</p>${paras.map((t) => `<p>${t}</p>`).join("")}</div>`;
+  const media = (tall = false) =>
+    `<div class="more__media${tall ? " more__media--tall" : ""}"><span class="placeholder-label">image / video</span></div>`;
+
+  return `
+    <div class="card__more">
+      ${box("Overview", [LOREM[0], LOREM[1]])}
+      ${media()}
+      <div class="more__row">
+        ${box("Process", [LOREM[2]])}
+        ${box("Outcome", [LOREM[3]])}
+      </div>
+      <div class="more__row">${media(true)}${media(true)}</div>
+      ${box("Reflection", [LOREM[1], LOREM[0]])}
+      ${media()}
+      ${box("Credits", ["Collaborators, tools, and acknowledgements."])}
+    </div>`;
+}
+
 function mediaHTML(media) {
   if (!media) return `<span class="placeholder-label">image / video</span>`;
   if (media.type === "video") {
@@ -41,6 +71,7 @@ projectsEl.innerHTML = PROJECTS.map((p, i) => `
         <p class="label">Role</p><p>${p.role}</p>
       </div>
     </div>
+    ${moreHTML()}
   </a>
 `).join("");
 
@@ -56,6 +87,17 @@ cards.forEach((card) => {
   card.addEventListener("mouseenter", () => open(card));
   card.addEventListener("focus", () => open(card));
 });
+
+// On the home page (header not fully collapsed), the first project is the
+// default: it re-opens when the cursor leaves the projects. Once scrolled
+// down, the last hovered project stays open.
+let collapsed = false;
+
+function resetToFirst() {
+  if (!collapsed && !projectsEl.matches(":hover")) open(cards[0]);
+}
+
+projectsEl.addEventListener("mouseleave", resetToFirst);
 
 // ---------- header collapse on scroll ----------
 // Figma: header line at 523 / 1024 → 68 (compact "Enya Pan" bar).
@@ -89,6 +131,16 @@ function update() {
   root.style.setProperty("--p", p.toFixed(4));
   root.style.setProperty("--header-h", `${lerp(layout.full, layout.compact)}px`);
   root.style.setProperty("--statement-top", `${lerp(layout.topStart, layout.topEnd)}px`);
+
+  // Scrolling back up to the home page also restores the default
+  const wasCollapsed = collapsed;
+  collapsed = p >= 1;
+  // cards scroll on their own only on the scrolled-down page
+  document.body.classList.toggle("is-collapsed", collapsed);
+  if (wasCollapsed && !collapsed) {
+    cards.forEach((c) => { c.scrollTop = 0; });
+    resetToFirst();
+  }
 }
 
 let ticking = false;
