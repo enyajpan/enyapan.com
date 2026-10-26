@@ -92,6 +92,7 @@ cards.forEach((card) => {
 // default: it re-opens when the cursor leaves the projects. Once scrolled
 // down, the last hovered project stays open.
 let collapsed = false;
+let progress = 0; // header collapse, 0 → 1
 
 function resetToFirst() {
   if (!collapsed && !projectsEl.matches(":hover")) open(cards[0]);
@@ -129,6 +130,7 @@ function update() {
   const lerp = (a, b) => a + (b - a) * p;
 
   root.style.setProperty("--p", p.toFixed(4));
+  progress = p;
   root.style.setProperty("--header-h", `${lerp(layout.full, layout.compact)}px`);
   root.style.setProperty("--statement-top", `${lerp(layout.topStart, layout.topEnd)}px`);
 
@@ -166,3 +168,48 @@ window.addEventListener("keydown", (e) => {
     document.body.classList.toggle("show-guides");
   }
 });
+
+// ---------- hover labels (rabbit, hole, "Enya", "Pan", "designer") ----------
+// Any element with data-label gets a label that follows the cursor.
+// data-theme picks the colors (see .hover-label--* in style.css).
+// The rabbit is in frame for the first ~4.15s of the 6s loop, then it's gone into the hole.
+
+const bunnyVideo = document.querySelector(".bunny__video");
+const RABBIT_GONE_AT = 4.15;
+
+const hoverLabel = document.createElement("div");
+hoverLabel.className = "hover-label";
+hoverLabel.setAttribute("aria-hidden", "true");
+document.body.appendChild(hoverLabel);
+
+let hoveredEl = null;
+const cursor = { x: 0, y: 0 };
+
+function labelIsAvailable(el) {
+  // words in the rest of the headline (and the bunny) fade out as the header collapses
+  if (el.closest(".rest") && progress >= 0.2) return false;
+  if (!el.classList.contains("bunny__hit")) return true;
+  return !(el.dataset.label === "rabbit" && bunnyVideo.currentTime > RABBIT_GONE_AT);
+}
+
+function renderHoverLabel() {
+  const show = hoveredEl && labelIsAvailable(hoveredEl);
+  hoverLabel.classList.toggle("is-visible", Boolean(show));
+  if (!show) return;
+  hoverLabel.textContent = hoveredEl.dataset.label;
+  hoverLabel.className = `hover-label is-visible hover-label--${hoveredEl.dataset.theme || "gray"}`;
+  hoverLabel.style.transform = `translate(${cursor.x + 12}px, ${cursor.y + 14}px)`;
+}
+
+document.querySelectorAll("[data-label]").forEach((el) => {
+  el.addEventListener("mouseenter", () => { hoveredEl = el; renderHoverLabel(); });
+  el.addEventListener("mouseleave", () => { hoveredEl = null; renderHoverLabel(); });
+  el.addEventListener("mousemove", (e) => {
+    cursor.x = e.clientX;
+    cursor.y = e.clientY;
+    renderHoverLabel();
+  });
+});
+
+bunnyVideo.addEventListener("timeupdate", renderHoverLabel);
+window.addEventListener("scroll", renderHoverLabel, { passive: true });

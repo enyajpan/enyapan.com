@@ -126,18 +126,61 @@ a { color: inherit; text-decoration: none; }
 .bunny-slot {
   display: inline-block;
   position: relative;
-  width: 3.38em;           /* bunny width: 217 / 88 × 1.37em */
+  width: 2.815em;          /* width of the drawn bunny */
   height: 0;               /* adds nothing to the line height */
-  margin: 0 0.05em;
+  margin: 0 -0.2em 0 0.078125em; /* at 64px text: 5px after "research"; "enthusiast" pulled in 16px */
 }
 
+/* bunny_hop.mp4 (1074 × 486) has white space around the drawing (drawing ≈ x 40–1032, y 62–445).
+   Sized so the drawing is 1.085em tall (79% of the original 1.37em),
+   vertically centered where the old SVG sat. */
 .bunny {
   position: absolute;
-  left: 0;
-  bottom: -0.42em;         /* slot bottom = text baseline */
-  height: 1.37em;
-  width: auto;
+  display: block;
+  left: -0.113em;          /* 40px of white space on the left */
+  bottom: -0.393em;        /* drawing bottom 0.28em below the baseline, plus 41px of white space */
+  height: 1.376em;         /* 486 / 383 × 1.085em */
+  aspect-ratio: 1074 / 486;
 }
+
+.bunny__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  mix-blend-mode: multiply; /* white video background disappears into the page */
+  pointer-events: none;    /* not clickable, no play / pause */
+}
+
+.bunny__video::-webkit-media-controls,
+.bunny__video::-webkit-media-controls-start-playback-button { display: none !important; }
+
+/* Invisible hover areas, in % of the video frame (1074 × 486), measured from the animation */
+.bunny__hit { position: absolute; }
+.bunny__hit--rabbit { left: 3.63%; top: 8.64%; width: 67.13%; height: 83.33%; }   /* x 39–760, y 42–447 */
+.bunny__hit--hole   { left: 70.95%; top: 61.73%; width: 25.14%; height: 29.63%; } /* x 762–1032, y 300–444 */
+
+/* Hover label (rabbit, hole, "Enya", "Pan"), positioned at the cursor by script.js */
+.hover-label {
+  position: fixed;
+  z-index: 10;
+  top: 0;
+  left: 0;
+  padding: 1px 5px;
+  font-family: var(--font);
+  font-size: 10pt;
+  line-height: 1.3;
+  border: 1px solid;
+  white-space: pre;        /* keeps line breaks in data-label */
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.hover-label--gray  { color: #767885; background: #e9eaf0; border-color: #767885; } /* rabbit, hole */
+.hover-label--green  { color: #5e9900; background: #d8f184; border-color: #5e9900; line-height: 10pt; padding-block: 2px; } /* "Enya" (+1px top/bottom) */
+.hover-label--blue-stacked { color: #0062ff; background: #d8e7ff; border-color: #0062ff; line-height: 10pt; padding-block: 2px; } /* "designer" */
+.hover-label--purple { color: #c107ff; background: #faebff; border-color: #c107ff; line-height: 10pt; padding-block: 2px; } /* "Pan" (+1px top/bottom) */
+
+.hover-label.is-visible { visibility: visible; }
 
 .nav {
   position: absolute;
@@ -332,6 +375,7 @@ body.show-guides .projects { outline: 1px dashed var(--guide); }
 
   .statement { position: static; width: auto; font-size: 34px; }
   .statement .rest { opacity: 1; }
+  .desktop-break { display: none; }
   .nav { position: static; justify-content: flex-end; gap: 20px; }
   .nav a { width: auto; }
 
