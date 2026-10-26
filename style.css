@@ -49,9 +49,9 @@
   --u: calc(100vw / 1440);
   --p: 0;
 
-  --ink: #000;
+  --ink: #3d3d3d;      /* all text */
   --paper: #fff;
-  --rule: #000;
+  --rule: #3d3d3d;     /* header line */
   --media: #d9d9d9;   /* image / video placeholder */
   --text-box: #f2f2f2; /* text placeholder */
   --guide: red;
@@ -148,6 +148,7 @@ a { color: inherit; text-decoration: none; }
   width: 100%;
   height: 100%;
   mix-blend-mode: multiply; /* white video background disappears into the page */
+  opacity: 0.75;
   pointer-events: none;    /* not clickable, no play / pause */
 }
 
