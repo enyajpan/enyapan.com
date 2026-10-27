@@ -14,7 +14,7 @@ const PROJECTS = [
     caseStudy: {
       meta: [
         { label: "Timeline", value: "May 2025" },
-        { label: "Scope", value: "Concept // Graphic / Web Design" },
+        { label: "Scope", value: "Graphic &amp; Web Design // Installation" },
       ],
       context: {
         label: "RISD Degree Project",
