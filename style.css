@@ -113,6 +113,7 @@ a { color: inherit; text-decoration: none; }
   inset: 0 0 auto 0;
   height: var(--header-h, 523px);
   border-bottom: 1px solid var(--rule);
+  background: var(--paper);
   overflow: hidden;
 }
 
@@ -219,29 +220,23 @@ body.is-collapsed .scroll-cue { visibility: hidden; }
 
 .hover-label.is-visible { visibility: visible; }
 
+/* Figma: 14px links centred at x 1211.5 / 1288 / 1367, sitting on one baseline; the current page
+   is 20px (top 35, the others 41). The boxes touch (1173.5 → 1407.5), each centred on its link. */
 .nav {
   position: absolute;
-  top: calc(30 * var(--u));
-  right: calc(22 * var(--u));
+  top: calc(35 * var(--u));
+  right: calc(32.5 * var(--u));
   display: flex;
+  align-items: baseline;
   font-size: max(12px, calc(14 * var(--u)));
 }
 
-/* each link turns its own colour on hover; the current page is in medium weight, in its colour */
-.nav a {
-  width: calc(80 * var(--u));
-  height: calc(27 * var(--u));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s ease;
-}
+.nav a { text-align: center; line-height: normal; }
+.nav__work    { width: calc(76 * var(--u)); }
+.nav__archive { width: calc(77 * var(--u)); }
+.nav__about   { width: calc(81 * var(--u)); }
 
-.nav__work:hover    { color: #e1f1ab; }
-.nav__archive:hover { color: #faebff; }
-.nav__about:hover   { color: #d8e7ff; }
-.nav__work[aria-current="page"]    { color: #5e9900; font-weight: 500; }
-.nav__archive[aria-current="page"] { color: #c107ff; font-weight: 500; }
+.nav a[aria-current="page"] { font-size: max(16px, calc(20 * var(--u))); }
 
 /* ---------- projects (accordion) ---------- */
 
@@ -274,10 +269,11 @@ body.is-collapsed .scroll-cue { visibility: hidden; }
        so it matches the open card's thumbnail
      - open card at the top of the page: 65.6% of the card's height (Figma top frame) + 30px
      - open card once scrolled: locked to the Figma shape 1150 × 621 (54cqi = 54% of the card's width),
-       so the thumbnail is never cropped, whatever the window's proportions */
+       so the thumbnail is never cropped, whatever the window's proportions
+       (a project can set its own shape with --open-media, e.g. Machine Orthography's side-by-side pair) */
   --media-h: calc(
     (1 - var(--a)) * (var(--media-closed) * 100% + (1 - var(--p)) * 30px)
-    + var(--a) * ((1 - var(--p)) * (var(--media-open) * 100% + 30px) + var(--p) * 54cqi)
+    + var(--a) * ((1 - var(--p)) * (var(--media-open) * 100% + 30px) + var(--p) * var(--open-media, 54cqi))
   );
 
   /* each card scrolls on its own, but only once the header has collapsed */
@@ -305,6 +301,14 @@ body.is-collapsed .card { overflow-y: auto; }
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+/* Two images side by side as the thumbnail (Archive: Machine Orthography) */
+.media-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.435cqi;              /* 5px at 1150 */
+  height: 100%;
 }
 
 /* Samsung thumbnail (Figma "samsung" frame): the video sits on the frame's pale background,
@@ -448,6 +452,45 @@ body.is-collapsed .card { overflow-y: auto; }
   .case__context   { padding-right: 0.435cqi; }
 }
 
+/* Archive: the text under the title, in columns (widths, gaps and the space down to the images
+   in Figma px, --s = 1px at 1150) */
+.case__notes {
+  --s: 0.08696cqi;
+  display: grid;
+  gap: calc(4 * var(--s));
+  padding-inline: 1.739cqi;
+  margin-bottom: calc((var(--after) - 24) * var(--s));   /* the images already sit 24 below */
+}
+.case__notes-cols { display: flex; align-items: flex-start; gap: calc(var(--gap) * var(--s)); }
+.case__note {
+  flex: none;
+  width: calc(var(--w) * var(--s));
+  display: grid;
+  gap: calc(4 * var(--s));
+}
+.case__note[style*="--before"] { margin-left: calc((var(--before) - var(--gap)) * var(--s)); }
+.case__link { text-decoration: underline; text-underline-offset: 0.15em; cursor: pointer; }
+
+body:not(.is-collapsed) .card--case .case__notes,
+.card:not(.is-open) .case__notes { display: none; }
+
+/* Archive: the timeline sits at the right, from x 988 */
+@container (min-width: 700px) {
+  .page-archive .card .case__overview { grid-template-columns: 968fr 142fr; align-items: start; }
+}
+
+/* Archive covers placed like their Figma crop, in the open card */
+.card.is-open .card__media img.media--crop {
+  position: absolute;
+  left: var(--l);
+  top: var(--t);
+  width: var(--w);
+  height: var(--h);
+  transform-origin: 0 0;
+  transform: rotate(var(--r));
+  object-fit: fill;
+}
+
 /* "RISD GRAPHIC DESIGN DEGREE PROJECT" sits just above the title (Figma: -4px gap) */
 .case__heading .case__label { margin: 0 0 calc(-1 * clamp(1px, 0.348cqi, 4px)); }
 
@@ -580,6 +623,70 @@ body.is-collapsed .case__tagline { display: none; }
   height: auto;                         /* width / height attributes keep the aspect ratio */
   background: var(--media);             /* gray until the file loads */
   pointer-events: none;
+}
+
+/* Buttons in a project (Archive): same look as the header's "Scroll to view" */
+.case__cue {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 5px;
+  border: 1px solid #3d3d3d;
+  border-radius: 4px;
+  background: none;
+  color: #3d3d3d;
+  font: inherit;
+  font-size: 12px;
+  line-height: 20px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.case__cue svg { flex: none; }
+
+/* "Scroll to view": next to the title, 16px after it */
+.case__title-row { display: flex; align-items: center; gap: calc(16 * 0.08696cqi); }
+.card:not(.is-open) .case__scroll,
+body:not(.is-collapsed) .case__scroll { display: none; }   /* the film shows only once scrolled down */
+
+/* A video the viewer plays: Play / Mute above its right corner */
+.case__player { position: relative; cursor: pointer; }
+
+/* Play button over the middle of the film while it's paused */
+.case__play {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 15px);          /* middle of the picture, below the Play / Mute row */
+  transform: translate(-50%, -50%);
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #3d3d3d;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  color: #3d3d3d;
+  cursor: pointer;
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.case__play svg { width: 28px; height: 28px; margin-left: 3px; fill: currentColor; }
+.case__player:hover .case__play { transform: translate(-50%, -50%) scale(1.06); }
+.case__player.is-playing .case__play { opacity: 0; pointer-events: none; }
+.case__player-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 1.739cqi 8px 0;  /* above the film, 20px in from its right edge (Figma) */
+}
+
+/* A video still loading: its tiny poster frame, blurred (see "blurred preview" in script.js).
+   clip-path keeps the blur inside the video's box. */
+video { transition: filter 0.4s; }
+video.is-preview {
+  filter: blur(16px);
+  clip-path: inset(0);
 }
 
 /* ---------- project with its own layout (dx-app) ----------
@@ -985,29 +1092,193 @@ video::-webkit-media-controls-overlay-play-button { display: none !important; }
   grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
 }
 
-/* ---------- Archive page (Figma frame "Play") ----------
-   No header collapse: the line sits at 213, the headline at 42.84px from y 53, and the eight
-   projects always show as the scrolled-down project view (7 narrow 42.5px strips + one open card).
-   --p: 1 gives every card the scrolled-down sizes; the headline overrides it. */
+/* Archive: images 20px in from both sides; an empty gap between them */
+.case__assets--inset { padding-inline: 1.739cqi; }
+.case__space { height: calc(var(--space) * 0.08696cqi); }
+/* a row of a fixed height (Figma px), the files cropped to fill their columns */
+.case__grid--row > * { height: calc(var(--row) * 0.08696cqi); object-fit: cover; }
+
+/* ---------- Archive page (Figma frame "Archive") ----------
+   The line sits at 223.75 (11.25 under the headline) and the headline is 29.49px (419 wide) from
+   y 148; scrolling collapses
+   the header to Work's 68px bar while the headline backspaces to "Enya loves to play." (script.js).
+   The eight projects are one open card plus seven 42.5px strips, 5px apart, from x 17 to 21px from
+   the right, down to the bottom of the window. The cards always use the scrolled-down sizes (--p: 1). */
 
 @media (min-width: 761px) {
-  body.page-archive { --p: 1; }
-  .page-archive .scroller { height: 100vh; }
-
   .page-archive .statement {
-    width: calc(571 * var(--u));
-    font-size: calc(42.84 * var(--u));
+    width: calc(419 * var(--u));
+    font-size: calc(29.49 * var(--u));
   }
-  .page-archive .statement .rest { opacity: 1; }
+
+  /* the header eases to its new height as the headline goes from two lines to one and back
+     (not while the page loads, so it doesn't slide in from Work's height) */
+  .page-archive:not(.is-loading) .site-header { transition: height 0.35s var(--ease); }
+  .page-archive:not(.is-loading) .projects { transition: top 0.35s var(--ease); }
+  .page-archive .card:not(.is-open) .case__meta,
+  .page-archive .card:not(.is-open) .case__text { display: none; } /* timeline and write-up only on the open project */
+
+  /* Not hovered: the cover fills the strip, with the label and title at the bottom of the window
+     (a 50px band, enough for a title on four lines) */
+  .page-archive .card {
+    --strip-text: 50px;
+    --media-h: calc((1 - var(--a)) * (100% - var(--strip-text)) + var(--a) * var(--open-media, 54cqi));
+  }
+  .page-archive .card:not(.is-open) .card__info.case {
+    height: calc(var(--strip-text) - 4px);
+    margin-top: 4px;
+    padding-bottom: 4px;
+    justify-content: flex-end;
+  }
   .page-archive.is-loading .card,
   .page-archive.is-loading .projects { transition: none; }
 
   .page-archive .projects {
+    --p: 1;
+    --text-min: 4px;
+    --lh-min: 5.333px;
     --gap: calc(5 * var(--u));
     --card-min: calc(42.5 * var(--u));
     left: calc(17 * var(--u));
     right: calc(21 * var(--u));
     bottom: 0;                /* the projects run to the bottom of the window */
+  }
+}
+
+/* The headline's line breaks are Work's; while it's being retyped it keeps the last page's shape */
+.page-archive .desktop-break,
+.page-about .desktop-break,
+.statement.is-retyping .desktop-break { display: none; }
+
+/* Archive and About delete words instead of fading them like Work */
+.page-archive .statement .rest,
+.page-about .statement .rest { opacity: 1; }
+
+/* Cursor while the headline is backspaced / typed */
+.type-caret {
+  display: inline-block;
+  width: 0.06em;
+  height: 0.95em;
+  margin-left: 0.04em;
+  vertical-align: -0.12em;
+  background: #0062ff;
+  animation: caret-blink 1s steps(1) infinite;
+}
+
+@keyframes caret-blink { 50% { opacity: 0; } }
+
+/* ---------- About page (Figma frame "About") ----------
+   Same small header as Archive ("Enya Pan is" from y 148, line 13.69 under it), no collapse.
+   Everything below starts 14 under the line:
+   a nested list at 26px from x 20, with L-shaped connectors (24 × 18, 2px);
+   Experience from x 641 (205 wide), Education from x 870 (214 wide), and a 261 × 400 photo at x 1141. */
+
+/* one screen, no scrolling (phones scroll: the columns stack there, see the small-screen rules) */
+html:has(body.page-about),
+.page-about { height: 100%; overflow: hidden; }
+.page-about .scroller { height: 100vh; }
+.page-about .stage { position: relative; height: 100vh; overflow: hidden; }
+.page-about .statement { width: calc(419 * var(--u)); font-size: calc(29.49 * var(--u)); } /* as wide as Archive's */
+.page-about:not(.is-loading) .site-header { transition: height 0.35s var(--ease); }
+
+.about {
+  display: flex;
+  align-items: flex-start;
+  padding: calc(var(--header-h, 194px) + 14 * var(--u)) calc(38 * var(--u)) calc(60 * var(--u)) calc(20 * var(--u));
+  font-size: calc(26 * var(--u));
+  line-height: calc(32 * var(--u));
+}
+
+.about__list {
+  flex: none;
+  width: calc(621 * var(--u));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: calc(6 * var(--u));
+}
+
+.about__list li { position: relative; }
+.about__sub { padding-left: calc(54 * var(--u)); }
+.about__sub--2 { padding-left: calc(94 * var(--u)); max-width: calc(557 * var(--u)); }
+
+/* the L-shaped connector in front of each sub-line */
+.about__sub::before {
+  content: "";
+  position: absolute;
+  left: calc(20 * var(--u) - 1px);
+  top: 0;
+  width: calc(24 * var(--u));
+  height: calc(18 * var(--u));
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+}
+.about__sub--2::before { left: calc(60 * var(--u) - 1px); }
+
+.about__col { flex: none; }
+.about__col--experience { width: calc(205 * var(--u)); margin-right: calc(24 * var(--u)); }
+.about__col--education { width: calc(214 * var(--u)); }
+
+.about__photo {
+  flex: none;
+  width: calc(261 * var(--u));
+  height: calc(400 * var(--u));
+  margin-left: auto;          /* right edge at 1402, like the nav */
+  object-fit: cover;
+  display: block;
+}
+
+.about__col h2 { margin: 0 0 calc(16 * var(--u)); font: inherit; }
+.about__col dl { margin: 0; display: grid; gap: calc(16 * var(--u)); }
+.about__col--education dl { gap: calc(24 * var(--u)); }
+.about__nested { display: grid; gap: calc(16 * var(--u)); padding-left: calc(16 * var(--u)); }
+.about__col dl div:not(.about__nested) { display: grid; gap: calc(4 * var(--u)); }
+.about__col dt { font-size: max(12px, calc(14 * var(--u))); line-height: 1.2; }
+.about__col dd {
+  margin: 0;
+  font-size: max(10px, calc(12 * var(--u)));
+  line-height: calc(11 * var(--u));
+  font-style: italic;
+}
+.about__nested dd:has(br) { line-height: calc(18 * var(--u)); }
+
+/* ---------- Work ⇄ Archive page change ----------
+   The headline shrinks / grows and moves into place, and the header line slides up / down,
+   instead of the page jumping (cross-page View Transitions; browsers without them just switch). */
+
+@view-transition { navigation: auto; }
+
+@media (min-width: 761px) and (prefers-reduced-motion: no-preference) {
+  .statement { view-transition-name: statement; }
+
+  /* each menu word grows / shrinks into place (the one for the new page grows to 20px) */
+  .nav a span { display: inline-block; }
+  .nav__work span    { view-transition-name: nav-work; }
+  .nav__archive span { view-transition-name: nav-archive; }
+  .nav__about span   { view-transition-name: nav-about; }
+  ::view-transition-old(nav-work),
+  ::view-transition-old(nav-archive),
+  ::view-transition-old(nav-about) { display: none; }
+  ::view-transition-new(nav-work),
+  ::view-transition-new(nav-archive),
+  ::view-transition-new(nav-about) { animation: none; }   /* scaled by its group, no fade */
+  .site-header { view-transition-name: site-header; }
+
+  ::view-transition-group(*) {
+    animation-duration: var(--dur);
+    animation-timing-function: var(--ease);
+  }
+
+  /* The header box animates its height; only the new page's line is drawn, pinned to the
+     bottom of the moving box, so the line itself travels instead of fading between two lines. */
+  ::view-transition-old(site-header) { display: none; }
+  ::view-transition-new(site-header) {
+    animation: none;
+    background: #fff;           /* white header, not see-through, while it changes height */
+    height: 100%;
+    object-fit: none;
+    object-position: 50% 100%;
   }
 }
 
@@ -1054,6 +1325,18 @@ body.show-guides .projects { outline: 1px dashed var(--guide); }
   .card__info { height: auto; opacity: 1; }
   .card__more,
   .case__assets { display: none; } /* long project content lives on project pages on phones */
+
+  html:has(body.page-about),
+  .page-about { height: auto; overflow: visible; }
+  .page-about .scroller,
+  .page-about .stage { height: auto; }
+  .page-about .statement { font-size: 34px; }
+  .about { flex-direction: column; gap: 40px; padding: 8px 16px 48px; }
+  .about__list,
+  .about__col--experience,
+  .about__col--education { width: auto; margin: 0; }
+  .about__photo { width: 100%; max-width: 400px; height: auto; margin: 0; }
+  .about__col dd { line-height: 1.4; }
 }
 
 @media (prefers-reduced-motion: reduce) {

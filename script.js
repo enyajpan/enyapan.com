@@ -136,7 +136,9 @@ const PROJECTS = [
 const root = document.documentElement;
 const header = document.querySelector(".site-header");
 const statement = document.querySelector(".statement");
-const projectsEl = document.querySelector(".projects");
+// the About page has no project list: a detached stand-in keeps the project code below harmless
+const projectsEl = document.querySelector(".projects") || document.createElement("div");
+const isAbout = document.body.classList.contains("page-about");
 
 // ---------- render cards ----------
 
@@ -171,18 +173,51 @@ function moreHTML() {
 }
 
 // Real project content (currently project 2, from the Figma frame "in-case-of-loss")
+// the chevron of the header's "Scroll to view" button
+const CHEVRON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M1 11L8 5L15 11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
 function caseStudyHTML(p) {
   const cs = p.caseStudy;
-  const asset = ({ src, w, h }) => {
+  const asset = ({ src, w, h, player }) => {
     const url = encodeURI(src);
-    return src.endsWith(".mp4")
-      ? `<video class="case__asset" data-src="${url}" width="${w}" height="${h}" autoplay muted loop playsinline disablepictureinpicture disableremoteplayback preload="none" tabindex="-1" aria-hidden="true"></video>`
-      : `<img class="case__asset" src="${url}" width="${w}" height="${h}" alt="" loading="lazy" decoding="async">`;
+    if (!src.endsWith(".mp4")) {
+      return `<img class="case__asset" src="${url}" width="${w}" height="${h}" alt="" loading="lazy" decoding="async">`;
+    }
+    if (player) {
+      // only the first frame loads (#t=0.1) until the viewer presses Play
+      return `
+        <div class="case__player">
+          <div class="case__player-bar">
+            <button class="case__cue" type="button" data-player="play">Play</button>
+            <button class="case__cue" type="button" data-player="mute">Mute</button>
+          </div>
+          <video class="case__asset case__player-video" src="${url}#t=0.1" width="${w}" height="${h}" playsinline disablepictureinpicture disableremoteplayback preload="metadata" tabindex="-1"></video>
+          <button class="case__play" type="button" aria-label="Play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5L8 5.5Z"/></svg></button>
+        </div>`;
+    }
+    return `<video class="case__asset" data-src="${url}" width="${w}" height="${h}" autoplay muted loop playsinline disablepictureinpicture disableremoteplayback preload="none" tabindex="-1" aria-hidden="true"></video>`;
   };
 
-  // { grid: [...], cols } puts several files side by side (Archive)
+  // Archive: { grid: [...], cols } puts several files side by side; { grid, template, height } is a row
+  // of that height (Figma px) with those columns, the files cropped to fill; { space } is an empty gap
   const assetOrGrid = (a) =>
-    a.grid ? `<div class="case__grid" style="--cols: ${a.cols}">${a.grid.map(asset).join("")}</div>` : asset(a);
+    a.space ? `<div class="case__space" style="--space: ${a.space}"></div>`
+    : a.template ? `<div class="case__grid case__grid--row" style="grid-template-columns: ${a.template}; --row: ${a.height}">${a.grid.map(asset).join("")}</div>`
+    : a.grid ? `<div class="case__grid" style="--cols: ${a.cols}">${a.grid.map(asset).join("")}</div>`
+    : asset(a);
+
+  // Archive: text under the title, an optional label over columns (widths and gaps in Figma px)
+  const notesHTML = (n) => `
+      <div class="case__notes" style="--gap: ${n.gap || 0}; --after: ${n.after ?? 40}">
+        ${n.label ? `<p class="case__label">${n.label}</p>` : ""}
+        <div class="case__notes-cols">
+          ${n.cols.map((c) => `
+          <div class="case__note" style="--w: ${c.width}${c.before != null ? `; --before: ${c.before}` : ""}">
+            ${c.label ? `<p class="case__label">${c.label}</p>` : ""}
+            <p class="case__body">${c.html}</p>
+          </div>`).join("")}
+        </div>
+      </div>`;
 
   const collageImg = ({ src, w, h }) =>
     `<img class="case__collage-img" src="${encodeURI(src)}" width="${w}" height="${h}" alt="" loading="lazy" decoding="async">`;
@@ -194,11 +229,16 @@ function caseStudyHTML(p) {
       <div class="case__overview">
         <div class="case__heading">
           <p class="case__label">${p.eyebrow}</p>
-          <h2 class="case__title">${p.title}</h2>
+          ${p.scrollCue ? `
+          <div class="case__title-row">
+            <h2 class="case__title">${p.title}</h2>
+            <button class="case__cue case__scroll" type="button">${CHEVRON}Scroll to view</button>
+          </div>` : `<h2 class="case__title">${p.title}</h2>`}
         </div>
         ${cs.meta.map((m) => `<div class="case__meta"><p class="case__label">${m.label}</p><p class="case__value">${m.value}</p></div>`).join("")}
         ${p.tagline ? `<p class="case__tagline">${p.tagline}</p>` : ""}
       </div>
+      ${cs.notes ? notesHTML(cs.notes) : ""}
       ${cs.body ? `<div class="${cs.bodyClass || "dx"}">${cs.body}</div>` : !cs.statement ? "" : `
       <div class="case__text">
         <div class="case__statement">
@@ -217,7 +257,7 @@ function caseStudyHTML(p) {
         </div>` : ""}
       </div>`}
     </div>
-    ${cs.assets ? `<div class="case__assets">${cs.assets.map(assetOrGrid).join("")}</div>` : ""}`;
+    ${cs.assets ? `<div class="case__assets${cs.assetsInset ? " case__assets--inset" : ""}">${cs.assets.map(assetOrGrid).join("")}</div>` : ""}`;
 }
 
 // Project 4's write-up (Figma frame "samsung"). The image blocks are 2x exports of the Figma groups.
@@ -304,23 +344,31 @@ function dxLockHTML() {
 
 function mediaHTML(media) {
   if (!media) return `<span class="placeholder-label">image / video</span>`;
-  if (media.type === "video") {
-    return `<video${media.cls ? ` class="${media.cls}"` : ""} src="${encodeURI(media.src)}" autoplay muted loop playsinline disablepictureinpicture disableremoteplayback preload="auto" tabindex="-1" aria-hidden="true"></video>`;
+  if (media.type === "pair") {
+    return `<div class="media-pair">${media.srcs.map((src) => `<img src="${encodeURI(src)}" alt="" loading="lazy">`).join("")}</div>`;
   }
-  return `<img src="${encodeURI(media.src)}" alt="" loading="lazy">`;
+  if (media.type === "video") {
+    return `<video${media.cls ? ` class="${media.cls}"` : ""} src="${encodeURI(media.src)}"${media.sound ? " data-sound" : " autoplay muted"} loop playsinline disablepictureinpicture disableremoteplayback preload="auto" tabindex="-1" aria-hidden="true"></video>`;
+  }
+  // Archive covers placed like their Figma crop (only in the open card; narrow strips fill as usual)
+  if (media.crop) {
+    const { l, t, w, h, r = "0deg" } = media.crop;
+    return `<img class="media--crop" src="${encodeURI(media.src)}" style="--l: ${l}; --t: ${t}; --w: ${w}; --h: ${h}; --r: ${r}" alt="" loading="lazy">`;
+  }
+  return `<img src="${encodeURI(media.src)}"${media.pos ? ` style="object-position: ${media.pos}"` : ""} alt="" loading="lazy">`;
 }
 
 // archive.html shows the Archive projects (archive.js) with the same cards
 const isArchive = document.body.classList.contains("page-archive");
 
-projectsEl.innerHTML = (isArchive ? ARCHIVE : PROJECTS).map((p, i) => p.caseStudy ? `
-  <a class="card card--case${p.link ? " card--link" : ""}" href="${p.link || `#project-${i + 1}`}"${p.link ? ` target="_blank" rel="noopener" data-label="click here to view" data-theme="blue-stacked"` : ""}>
-    <div class="card__media">${mediaHTML(p.media)}</div>
+projectsEl.innerHTML = (isArchive ? ARCHIVE : isAbout ? [] : PROJECTS).map((p, i) => p.caseStudy ? `
+  <a class="card card--case${p.link ? " card--link" : ""}" href="${p.link || `#project-${i + 1}`}"${p.media?.openHeight ? ` style="--open-media: ${p.media.openHeight}"` : ""}${p.link ? ` target="_blank" rel="noopener" data-label="click here to view" data-theme="blue-stacked"` : ""}>
+    <div class="card__media"${p.media?.bg ? ` style="background: ${p.media.bg}"` : ""}>${mediaHTML(p.media)}</div>
     ${caseStudyHTML(p)}
   </a>
 ` : `
   <a class="card" href="#project-${i + 1}">
-    <div class="card__media">${mediaHTML(p.media)}</div>
+    <div class="card__media"${p.media?.bg ? ` style="background: ${p.media.bg}"` : ""}>${mediaHTML(p.media)}</div>
     <div class="card__info">
       <div class="text-box">
         <h2>${p.title}</h2>
@@ -345,6 +393,9 @@ function open(card) {
   // once scrolled, a project that links out (Formel) stays narrow and the open project stays open
   if (collapsed && card.classList.contains("card--link")) return;
   cards.forEach((c) => c.classList.toggle("is-open", c === card));
+  // a video the viewer started stops when its project closes, and a thumbnail's sound goes off
+  document.querySelectorAll(".card:not(.is-open) .case__player-video").forEach((v) => v.pause());
+  syncSound();
   projectsEl.classList.toggle("is-even", !card); // nothing open: all five share the width
 }
 
@@ -360,12 +411,137 @@ cards.forEach((card) => {
 let collapsed = false;
 let progress = 0; // header collapse, 0 → 1
 
+// Archive (Figma frame "Archive"): one project is always open, the first to start with,
+// then the last one hovered.
 function resetToEven() {
-  if (!collapsed && !projectsEl.matches(":hover")) open(null);
+  if (!collapsed && !isArchive && !projectsEl.matches(":hover")) open(null);
 }
 
 projectsEl.addEventListener("mouseleave", resetToEven);
-if (!isArchive) open(null);
+open(isArchive ? cards[0] : null);
+// the first Archive project starts open, without animating from equal widths
+setTimeout(() => document.body.classList.remove("is-loading"), 100);
+
+// ---------- typed headline (all pages) ----------
+// Work, Archive and About share one headline, split into pieces (data-seg). Each page state shows
+// some of them. Going from one state to another, a cursor backspaces the pieces that go (last
+// first, one character at a time; the bunny and line breaks count as one) and then types the new
+// ones in order.
+//   Work      Enya Pan is a designer and research [bunny] enthusiast who loves to play.
+//   Archive   Enya Pan is a research [bunny] enthusiast who loves to play.
+//   scrolled  Enya loves to play.   (Archive)      Enya Pan   (Work, the rest fades out)
+//   About     Enya Pan is
+
+const SEGS = ["enya", "pan", "is", "a", "designer", "research", "enthusiast", "who", "loves"];
+const HEADLINES = {
+  work: SEGS,
+  "work-collapsed": ["enya", "pan"],
+  archive: SEGS.filter((s) => s !== "designer"),
+  "archive-collapsed": ["enya", "loves"],
+  about: ["enya", "pan", "is"],
+};
+
+const headline = (() => {
+  const segs = SEGS.map((name) => {
+    const el = statement.querySelector(`[data-seg="${name}"]`);
+    const units = [];
+    const walk = (node) => {
+      for (const child of node.childNodes) {
+        if (child.nodeType === Node.TEXT_NODE) [...child.textContent].forEach((ch) => units.push({ node: child, ch }));
+        else if (child.classList.contains("bunny-slot") || child.tagName === "BR") units.push({ el: child });
+        else walk(child);
+      }
+    };
+    walk(el);
+    return { name, el, units, shown: units.length };
+  });
+  const caret = document.createElement("span");
+  caret.className = "type-caret";
+  let timer = null;
+  let finish = null; // what to do when the current run ends (or is replaced by another)
+
+  const render = (seg) => {
+    const text = new Map();
+    seg.units.forEach((u, i) => {
+      if (u.el) u.el.style.display = i < seg.shown ? "" : "none";
+      else text.set(u.node, (text.get(u.node) || "") + (i < seg.shown ? u.ch : ""));
+    });
+    text.forEach((t, node) => { node.textContent = t; });
+  };
+
+  const stop = () => {
+    clearTimeout(timer);
+    caret.remove();
+    const done = finish;
+    finish = null;
+    done?.();
+  };
+
+  return {
+    // show a state at once
+    set(state) {
+      stop();
+      const keep = HEADLINES[state];
+      segs.forEach((seg) => { seg.shown = keep.includes(seg.name) ? seg.units.length : 0; render(seg); });
+    },
+    // backspace / type from what's showing now to a state
+    // speed: 1.5 types / backspaces one and a half times as fast
+    animate(state, { delay = 250, speed = 1, onStep = () => {}, onDone = () => {} } = {}) {
+      stop();
+      finish = onDone;
+      const keep = HEADLINES[state];
+      const step = () => {
+        // first backspace the last piece that has to go, then type the first piece that has to come
+        const going = segs.filter((seg) => !keep.includes(seg.name) && seg.shown > 0).pop();
+        const coming = !going && segs.find((seg) => keep.includes(seg.name) && seg.shown < seg.units.length);
+        const seg = going || coming;
+        if (!seg) { timer = setTimeout(stop, 500); return; }
+        seg.shown += going ? -1 : 1;
+        render(seg);
+        seg.el.appendChild(caret);
+        onStep();
+        timer = setTimeout(step, (going ? 32 + Math.random() * 24 : 45 + Math.random() * 35) / speed);
+      };
+      timer = setTimeout(step, delay);
+    },
+  };
+})();
+
+const pageHeadline = () =>
+  isAbout ? "about" : isArchive ? (collapsed ? "archive-collapsed" : "archive") : progress >= 0.5 ? "work-collapsed" : "work";
+
+// Leaving through the header links: remember how the headline looks, so the next page can start
+// from it (same words, same size) — the page change then morphs it in place before the typing.
+document.querySelectorAll(".nav a").forEach((link) => link.addEventListener("click", () => {
+  if (link.getAttribute("aria-current") === "page") return;
+  const box = statement.getBoundingClientRect();
+  const from = { state: pageHeadline(), width: box.width, font: parseFloat(getComputedStyle(statement).fontSize) };
+  try { sessionStorage.setItem("headline-from", JSON.stringify(from)); } catch {}
+}));
+
+// Arriving: start from the last page's headline and type this page's.
+// Until the typing is done the headline keeps the last page's shape: its width scaled to this
+// page's text size, and (Work) without its line breaks.
+let arrivingFrom = null;
+try { arrivingFrom = JSON.parse(sessionStorage.getItem("headline-from")); sessionStorage.removeItem("headline-from"); } catch {}
+if (arrivingFrom && HEADLINES[arrivingFrom.state] && arrivingFrom.state !== pageHeadline()) {
+  headline.set(arrivingFrom.state);
+  if (window.innerWidth > 760) {
+    const font = parseFloat(getComputedStyle(statement).fontSize);
+    statement.style.width = `${(arrivingFrom.width * font) / arrivingFrom.font}px`;
+  }
+  statement.classList.add("is-retyping");
+  const settle = () => {
+    statement.style.width = "";
+    statement.classList.remove("is-retyping");
+    measure();
+  };
+  // About → Work types the most, so it goes 1.5× as fast
+  const speed = arrivingFrom.state === "about" && pageHeadline() === "work" ? 1.5 : 1;
+  setTimeout(() => headline.animate(pageHeadline(), { delay: 0, speed, onStep: () => measure(), onDone: settle }), 800);
+} else {
+  headline.set(pageHeadline());
+}
 
 // ---------- header collapse on scroll ----------
 // Figma: header line at 523 / 1024 → 68 (compact "Enya Pan" bar).
@@ -376,18 +552,24 @@ let layout = { full: 523, compact: 68, topStart: 283, topEnd: 17 };
 function measure() {
   const u = window.innerWidth / 1440;
 
-  // Archive (Figma frame "Play"): no collapse. The header stays at its Figma size, line at 213,
-  // and the projects always show as the scrolled-down project view, one open at a time.
-  if (isArchive) {
-    root.style.setProperty("--header-h", `${213 * u}px`);
-    root.style.setProperty("--statement-top", `${53 * u}px`);
-    collapsed = true;
-    document.body.classList.add("is-collapsed");
-    if (!cards.some((c) => c.classList.contains("is-open"))) open(cards[0]);
-    // the first project starts open, without animating from equal widths
-    setTimeout(() => document.body.classList.remove("is-loading"), 100);
+  // About (Figma frame "About"): the same small header as Archive, no collapse. The line sits
+  // 13.69px under the headline (a quarter of Figma's 54.75), and moves down while it's retyped.
+  if (isAbout) {
+    const h = 148 * u + statement.getBoundingClientRect().height + 13.69 * u;
+    root.style.setProperty("--header-h", `${h}px`);
+    root.style.setProperty("--statement-top", `${148 * u}px`);
     return;
   }
+
+  // Archive (Figma frame "Archive"): a smaller header (headline from y 148, line 11.25px under it,
+  // half of Figma's 22.5, so at 223.75) that collapses to the same 68px bar as Work.
+  if (isArchive) {
+    layout = { full: 223.75 * u, compact: 68 * u, topStart: 148 * u, topEnd: 17 * u };
+    root.style.setProperty("--collapse-distance", `${layout.full - layout.compact}px`);
+    update();
+    return;
+  }
+
   root.style.setProperty("--p", 0);
 
   const statementHeight = statement.getBoundingClientRect().height;
@@ -405,15 +587,21 @@ function measure() {
 }
 
 function update() {
-  if (isArchive) return;
-  const distance = layout.full - layout.compact;
+  if (isAbout) return; // fixed header
+  // whole pixels: the page only scrolls in whole pixels, so a fractional distance (e.g. 55.1px)
+  // would never be reached and the header would never finish collapsing
+  const distance = Math.floor(layout.full - layout.compact);
   const p = Math.min(1, Math.max(0, window.scrollY / distance));
   const lerp = (a, b) => a + (b - a) * p;
 
   root.style.setProperty("--p", p.toFixed(4));
   progress = p;
-  root.style.setProperty("--header-h", `${lerp(layout.full, layout.compact)}px`);
-  root.style.setProperty("--statement-top", `${lerp(layout.topStart, layout.topEnd)}px`);
+  const statementTop = lerp(layout.topStart, layout.topEnd);
+  let headerH = lerp(layout.full, layout.compact);
+  // Archive: never shorter than the headline, so its second line isn't cut off while it backspaces
+  if (isArchive) headerH = Math.max(headerH, statementTop + statement.getBoundingClientRect().height + 11.25 * (window.innerWidth / 1440));
+  root.style.setProperty("--header-h", `${headerH}px`);
+  root.style.setProperty("--statement-top", `${statementTop}px`);
 
   // Scrolling back up to the home page also restores the default
   const wasCollapsed = collapsed;
@@ -425,6 +613,8 @@ function update() {
     cards.forEach((c) => { c.scrollTop = 0; });
     resetToEven();
   }
+  // Archive: "Enya Pan is a research … who loves to play." backspaces to "Enya loves to play."
+  if (isArchive && collapsed !== wasCollapsed) headline.animate(pageHeadline(), { onStep: () => update() });
 }
 
 let ticking = false;
@@ -449,6 +639,50 @@ const toggleSamsungMode = (e) => {
   badge.closest(".sx-platforms").classList.toggle("is-light");
 };
 projectsEl.addEventListener("click", toggleSamsungMode, true);
+
+// A link inside a project's text (Archive: cotton.design). The card is itself a link, so these are
+// spans with data-href that open in a new tab.
+const openTextLink = (e) => {
+  const link = e.target.closest(".case__link[data-href]");
+  if (!link || (e.type === "keydown" && e.key !== "Enter")) return;
+  e.preventDefault();
+  e.stopPropagation();
+  window.open(link.dataset.href, "_blank", "noopener");
+};
+projectsEl.addEventListener("click", openTextLink, true);
+projectsEl.addEventListener("keydown", openTextLink, true);
+
+// "Scroll to view" under a thumbnail, and the Play / Mute buttons of a video player (Archive).
+// The card is a link, so these clicks are handled here and go no further.
+projectsEl.addEventListener("click", (e) => {
+  const cue = e.target.closest(".case__scroll");
+  const player = e.target.closest(".case__player");
+  if (!cue && !player) return;
+  e.preventDefault();
+  e.stopPropagation();
+
+  if (cue) {
+    const card = cue.closest(".card");
+    const target = card.querySelector(".case__assets");
+    card.scrollTo({ top: target.offsetTop - card.offsetTop, behavior: "smooth" });
+    return;
+  }
+
+  const video = player.querySelector("video");
+  const action = e.target.closest("[data-player]")?.dataset.player || "play"; // clicking the picture plays / pauses
+  if (action === "play") video.paused ? video.play() : video.pause();
+  else video.muted = !video.muted;
+}, true);
+
+document.querySelectorAll(".case__player-video").forEach((video) => {
+  const bar = video.parentElement.querySelector(".case__player-bar");
+  const sync = () => {
+    video.parentElement.classList.toggle("is-playing", !video.paused); // hides the play button
+    bar.querySelector('[data-player="play"]').textContent = video.paused ? "Play" : "Pause";
+    bar.querySelector('[data-player="mute"]').textContent = video.muted ? "Unmute" : "Mute";
+  };
+  ["play", "pause", "volumechange", "ended"].forEach((type) => video.addEventListener(type, sync));
+});
 projectsEl.addEventListener("keydown", toggleSamsungMode, true);
 
 statement.addEventListener("click", (e) => {
@@ -510,14 +744,62 @@ document.querySelectorAll("[data-label]").forEach((el) => {
   });
 });
 
-bunnyVideo.addEventListener("timeupdate", renderHoverLabel);
+bunnyVideo?.addEventListener("timeupdate", renderHoverLabel); // no bunny on About
 window.addEventListener("scroll", renderHoverLabel, { passive: true });
+
+// ---------- blurred preview while a video loads ----------
+// Every video has a tiny (~2 KB) frame of itself at <folder>/web/<name>-poster.jpg. It shows,
+// blurred, in the video's place until the first real frame arrives (instead of a gray box).
+// Not for the headline bunny (small, loads at once) or project 1's encrypted videos.
+
+const posterFor = (src) => {
+  const path = decodeURI(src).split("#")[0];
+  const slash = path.lastIndexOf("/");
+  return encodeURI(`${path.slice(0, slash)}/web/${path.slice(slash + 1).replace(/\.\w+$/, "")}-poster.jpg`);
+};
+
+document.querySelectorAll("video").forEach((video) => {
+  const src = video.getAttribute("src") || video.dataset.src;
+  if (!src || video.closest(".bunny") || video.dataset.enc) return;
+  video.poster = posterFor(src);
+  if (video.readyState >= 2) return;
+  video.classList.add("is-preview");
+  video.addEventListener("loadeddata", () => video.classList.remove("is-preview"), { once: true });
+});
+
+// ---------- thumbnails with sound (Archive: Everything I Once Knew) ----------
+// The sound is on only while its project is open. Browsers only let a video play with sound by
+// itself once the visitor has clicked or pressed a key on the page; until then it plays silently
+// (data-blocked), and the sound comes on with that first click or key.
+
+function syncSound() {
+  document.querySelectorAll("video[data-sound]").forEach((video) => {
+    const isOpen = video.closest(".card").classList.contains("is-open");
+    video.muted = !isOpen || "blocked" in video.dataset;
+  });
+}
+
+document.querySelectorAll("video[data-sound]").forEach((video) => {
+  syncSound();
+  video.play().catch(() => {
+    video.dataset.blocked = "";
+    syncSound();
+    video.play().catch(() => {});
+    const allow = () => {
+      delete video.dataset.blocked;
+      syncSound();
+      video.play().catch(() => {});
+      ["pointerdown", "keydown"].forEach((type) => window.removeEventListener(type, allow, true));
+    };
+    ["pointerdown", "keydown"].forEach((type) => window.addEventListener(type, allow, true));
+  });
+});
 
 // ---------- project videos: load and play only while on screen ----------
 // The in-case-of-loss videos are large (23–102 MB), so nothing downloads until a
 // video is about to scroll into view, and each pauses again once it leaves.
 
-const caseVideos = document.querySelectorAll("video.case__asset, video.dx-phone, video.sx-video");
+const caseVideos = document.querySelectorAll("video.case__asset:not(.case__player-video), video.dx-phone, video.sx-video");
 
 const videoObserver = new IntersectionObserver((entries) => {
   entries.forEach(({ target: video, isIntersecting }) => {
