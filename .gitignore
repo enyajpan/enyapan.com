@@ -3,3 +3,6 @@
 # Desktop font files: licensed for this computer only, never publish
 *.otf
 *.ttf
+
+# Plain-text sources for the password-protected project 1 (encrypted copies are published instead)
+/private/

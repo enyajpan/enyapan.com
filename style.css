@@ -39,6 +39,13 @@
   font-weight: 700; font-style: italic; font-display: swap;
 }
 
+/* --even (0 → 1) is on .projects: 1 = no project open, so all five share the width equally */
+@property --even {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
 @property --a {
   syntax: "<number>";
   inherits: true;
@@ -123,6 +130,31 @@ a { color: inherit; text-decoration: none; }
 .statement .rest {
   opacity: clamp(0, 1 - var(--p) * 2.2, 1);
 }
+
+/* "SCROLL TO VIEW" (Figma: 129 × 22 at x 1291, y 490, 11px above the header line).
+   Fades out with the rest of the headline as the header collapses. */
+.scroll-cue {
+  position: absolute;
+  right: calc(20 * var(--u));
+  bottom: calc(11 * var(--u) - 1px);    /* -1px: the header's bottom border is inside its height */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 5px;
+  border: 1px solid #3d3d3d;
+  border-radius: 4px;
+  background: none;
+  color: #3d3d3d;
+  font: inherit;
+  font-size: 12px;
+  line-height: 20px;
+  text-transform: uppercase;
+  cursor: pointer;
+  opacity: clamp(0, 1 - var(--p) * 2.2, 1);
+}
+
+.scroll-cue svg { flex: none; }
+body.is-collapsed .scroll-cue { visibility: hidden; }
 
 /* The bunny is taller than a line of text, so it sits in a zero-height slot
    that only reserves its width, and is drawn over the text. Line spacing
@@ -212,11 +244,15 @@ a { color: inherit; text-decoration: none; }
   right: var(--margin);
   display: flex;
   gap: var(--gap);
+  --even: 0;
+  transition: --even var(--dur) var(--ease);
 }
+
+.projects.is-even { --even: 1; }
 
 .card {
   --a: 0;
-  flex: var(--a) 0 var(--card-min);
+  flex: calc(var(--a) + var(--even)) 0 var(--card-min);
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -260,6 +296,21 @@ body.is-collapsed .card { overflow-y: auto; }
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+/* Samsung thumbnail (Figma "samsung" frame): the video sits on the frame's pale background,
+   877 × 659 at x 137, y -50 of the 1150 × 621 cover. That cover fills the box like object-fit: cover,
+   so k = the larger of width / 1150 and height / 621. */
+.card__media:has(.media--samsung) { background: #f3f4fa; }
+.card__media .media--samsung {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: auto;
+  height: max(57.304cqi, 106.12%);   /* 659k */
+  aspect-ratio: 1460 / 1096;
+  transform: translate(-50%, -54.7%);  /* top = cover centre − (310.5 + 50)k */
+  object-fit: fill;
 }
 
 .card__media .placeholder-label {
@@ -376,14 +427,16 @@ body.is-collapsed .card { overflow-y: auto; }
   display: grid;
   grid-template-columns: 1fr;
   gap: clamp(3px, 2.087cqi, 24px);
+  padding-inline: 1.739cqi;             /* 20px left / right at 1150 (images stay full width) */
 }
 
 @container (min-width: 700px) {
-  .case__overview { grid-template-columns: 722fr 150fr 278fr; gap: 0; align-items: end; }
-  /* statement 648 (+74 space) | RISD DP 403 starting at 722, lined up with Timeline (+25 space) */
-  .case__text     { grid-template-columns: 722fr 428fr; gap: 0; }
-  .case__statement { padding-right: 6.435cqi; }
-  .case__context   { padding-right: 2.174cqi; }
+  /* inside the 20px padding: title 702 | Timeline 130 (starts at 722) | Scope 278 (starts at 852) */
+  .case__overview { grid-template-columns: 702fr 130fr 278fr; gap: 0; align-items: end; }
+  /* statement 648 (+54 space) | RISD DP 403 starting at 722, lined up with Timeline (+5 space) */
+  .case__text     { grid-template-columns: 702fr 408fr; gap: 0; }
+  .case__statement { padding-right: 4.696cqi; }
+  .case__context   { padding-right: 0.435cqi; }
 }
 
 /* "RISD GRAPHIC DESIGN DEGREE PROJECT" sits just above the title (Figma: -4px gap) */
@@ -391,9 +444,9 @@ body.is-collapsed .card { overflow-y: auto; }
 
 .case__title {
   margin: 0;
-  /* top of page: 20pt open / 16pt narrow (tighter 1.1 line spacing) → scrolled: Figma 26px, shrinking with the card */
-  font-size: calc((1 - var(--p)) * (21.333px + var(--a) * 5.333px) + var(--p) * clamp(var(--text-min), 2.261cqi, 26px));
-  line-height: calc((1 - var(--p)) * (23.467px + var(--a) * 8.533px) + var(--p) * clamp(var(--lh-min), 2.783cqi, 32px));
+  /* top of page: 16pt / 24px open, 14pt / 20px narrow → scrolled: Figma 26px, shrinking with the card */
+  font-size: calc((1 - var(--p)) * (18.667px + var(--a) * 2.667px) + var(--p) * clamp(var(--text-min), 2.261cqi, 26px));
+  line-height: calc((1 - var(--p)) * (20px + var(--a) * 4px) + var(--p) * clamp(var(--lh-min), 2.783cqi, 32px));
   font-weight: 400;
 }
 
@@ -407,15 +460,17 @@ body.is-collapsed .card { overflow-y: auto; }
 
 .case__value {
   margin: 0;
-  /* top of page: 14pt open / 7pt narrow → scrolled: Figma 16px, shrinking with the card */
-  font-size: calc((1 - var(--p)) * 9.333px * (1 + var(--a)) + var(--p) * clamp(var(--text-min), 1.391cqi, 16px));
-  line-height: calc((1 - var(--p)) * 11.667px * (1 + var(--a)) + var(--p) * clamp(var(--lh-min), 1.739cqi, 20px));
+  /* top of page: 12pt / 22.333px open, 7pt narrow → scrolled: Figma 16px, shrinking with the card */
+  font-size: calc((1 - var(--p)) * (9.333px + var(--a) * 6.667px) + var(--p) * clamp(var(--text-min), 1.391cqi, 16px));
+  line-height: calc((1 - var(--p)) * (11.667px + var(--a) * 10.667px) + var(--p) * clamp(var(--lh-min), 1.739cqi, 20px));
 }
 
 /* Top of the page: only the name, timeline and scope. The statement, DP text and images
    appear once the header has collapsed into the full project view. */
 body:not(.is-collapsed) .card--case .case__text,
-body:not(.is-collapsed) .card--case .case__assets { display: none; }
+body:not(.is-collapsed) .card--case .case__assets,
+body:not(.is-collapsed) .card--case .dx,
+body:not(.is-collapsed) .card--case .sx { display: none; }
 
 /* Top of the page: name, timeline and scope line up along their top edge */
 body:not(.is-collapsed) .card--case .case__overview { align-items: start; }
@@ -432,6 +487,7 @@ body.is-collapsed .case__tagline { display: none; }
 
 /* open card: tagline sits under the title, in the title's column */
 @container (min-width: 700px) {
+  .case__heading { grid-column: 1; grid-row: 1; }
   .case__tagline { grid-column: 1; grid-row: 2; margin-top: 8px; }
   body:not(.is-collapsed) .card--case .case__meta { grid-row: 1 / span 2; } /* so the title's row is only as tall as the title */
 }
@@ -460,6 +516,44 @@ body.is-collapsed .case__tagline { display: none; }
 
 .case__body + .case__body { margin-top: clamp(var(--lh-min), 1.739cqi, 20px); } /* one blank line between paragraphs */
 
+/* Text + image collage layout (mkwrl): 20 | text 545 | 40 | collage 531 | 14 empty.
+   Collage: two stacked images (241 wide, 10 apart) and a tall image (267), 16 apart, bottom-aligned,
+   sitting 83px lower than the text's top edge. */
+@container (min-width: 700px) {
+  .case--collage .case__text { grid-template-columns: 545fr 531fr; gap: 3.478cqi; padding-right: 1.217cqi; } /* 20 | 545 | 40 | 531 | 14 */
+  .case--collage .case__statement { padding-right: 0; }
+  .case--collage .case__collage { padding-top: 7.217cqi; }
+}
+
+.case__collage {
+  display: flex;
+  align-items: flex-end;
+  gap: 3.013%;                          /* 16 / 531 */
+}
+
+.case__collage-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.87cqi;                         /* 10px at 1150 */
+  width: 45.39%;                        /* 241 / 531 */
+}
+
+.case__collage-stack .case__collage-img { aspect-ratio: 241 / 141; }
+
+.case__collage > .case__collage-img {
+  width: 50.28%;                        /* 267 / 531 */
+  aspect-ratio: 267 / 338;
+}
+
+.case__collage-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  background: var(--media);
+  pointer-events: none;
+}
+
 /* extra space after the artist statement, before the assets (50px at 1150 wide) */
 .case__text { margin-bottom: clamp(4px, 4.348cqi, 50px); }
 
@@ -477,6 +571,394 @@ body.is-collapsed .case__tagline { display: none; }
   height: auto;                         /* width / height attributes keep the aspect ratio */
   background: var(--media);             /* gray until the file loads */
   pointer-events: none;
+}
+
+/* ---------- project with its own layout (dx-app) ----------
+   Measured from the Figma frame "dx-app" (1150 wide). --s is 1px at 1150 and scales with the card;
+   text never goes below --text-min / --lh-min and never above its Figma size. */
+
+.case--body { --s: 0.08696cqi; }
+.card--case .case--body {
+  gap: calc(28 * var(--s));             /* bottom of the 2-line Scope → Context (40 below the title) */
+}
+
+@container (min-width: 700px) {
+  /* inside the 20px padding: title 625 | Timeline 141 (starts at 645) | Scope 344 (starts at 786) */
+  .case--body .case__overview { grid-template-columns: 625fr 141fr 344fr; }
+  body.is-collapsed .case--body .case__overview { align-items: start; }
+}
+
+/* Project 1's password box, until it's unlocked */
+.dx-lock {
+  display: flex;
+  flex-direction: column;
+  gap: calc(8 * var(--s));
+}
+.dx-lock__row { display: flex; align-items: center; gap: calc(8 * var(--s)); margin-top: calc(8 * var(--s)); }
+.dx-lock__input {
+  font: inherit;
+  color: #3d3d3d;
+  border: 1px solid #3d3d3d;
+  border-radius: 4px;
+  padding: calc(6 * var(--s)) calc(10 * var(--s));
+}
+.dx-lock__field { position: relative; display: flex; }
+.dx-lock__input { width: calc(260 * var(--s)); min-width: 0; background: none; padding-right: calc(10 * var(--s) + 24px); }
+/* eye icon inside the field: open = password hidden (click to show), closed = shown */
+.dx-lock__eye {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: calc(10 * var(--s) + 22px);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #3d3d3d;
+  cursor: pointer;
+}
+.dx-lock__eye svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+.dx-lock__eye[aria-pressed="false"] .dx-lock__eye-closed,
+.dx-lock__eye[aria-pressed="true"] .dx-lock__eye-open { display: none; }
+.dx-lock__input:focus { outline: 2px solid #0062ff; outline-offset: 1px; }
+/* same look as the "Scroll to view" button in the header */
+.dx-lock__button {
+  flex: none;
+  padding: 0 5px;
+  border: 1px solid #3d3d3d;
+  border-radius: 4px;
+  background: none;
+  color: #3d3d3d;
+  font: inherit;
+  font-size: 12px;
+  line-height: 20px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.dx-lock__button:disabled { opacity: 0.5; cursor: progress; }
+.dx-lock__error { color: #e5291e; }
+
+.dx {
+  --t12: clamp(var(--text-min), calc(12 * var(--s)), 12px);
+  --t14: clamp(var(--text-min), calc(14 * var(--s)), 14px);
+  --t18: clamp(var(--text-min), calc(18 * var(--s)), 18px);
+  --t20: clamp(var(--text-min), calc(20 * var(--s)), 20px);
+  --t24: clamp(var(--text-min), calc(24 * var(--s)), 24px);
+  --l18: clamp(var(--lh-min), calc(18 * var(--s)), 18px);
+  --l20: clamp(var(--lh-min), calc(20 * var(--s)), 20px);
+  --l22: clamp(var(--lh-min), calc(22 * var(--s)), 22px);
+  --l30: clamp(var(--lh-min), calc(30 * var(--s)), 30px);
+  --green: #5e9900;  --green-bg: #e1f1ab;
+  --purple: #c107ff; --purple-bg: #faebff;
+  --blue: #0062ff;   --blue-bg: #d8e7ff;
+  --gray-bg: #e9eaf0;
+  --cyan-bg: #ebfbfc;
+
+  display: flex;
+  flex-direction: column;
+  gap: calc(40 * var(--s));
+  padding: 0 calc(20 * var(--s)) calc(66 * var(--s));   /* 66px of space after Takeaways */
+  font-size: var(--t14);
+  line-height: var(--l20);
+  hyphens: none;
+  overflow-x: clip;                     /* in a narrow card, words too long for their box are cut, never split */
+}
+
+.dx * { min-width: 0; }
+
+:where(.dx) :where(p, h3, ul) { margin: 0; } /* no specificity, so the spacing rules below win */
+.dx strong { font-weight: 500; }
+.dx .case__label { margin: 0; }
+
+.dx-green  { color: var(--green); }
+.dx-purple { color: var(--purple); }
+.dx-blue   { color: var(--blue); }
+
+/* label, then text, 4px apart */
+.dx-stack { display: flex; flex-direction: column; }
+.dx-stack > :where(* + *) { margin-top: calc(4 * var(--s)); }
+.dx-wide { max-width: 90.72%; }        /* 1007 / 1110 */
+
+.dx-lead { font-size: var(--t18); line-height: var(--l22); }
+.dx-heading { font-size: var(--t24); line-height: var(--l30); font-weight: 400; }
+.dx-text p + p, .dx-caption p + p, .dx-after-blank { margin-top: 1lh; } /* one blank line */
+
+/* The Problem (1005 wide), then 40 below: Opportunity (457) | 56 | Goal and Guardrail (492) */
+.dx-split {
+  display: flex;
+  flex-direction: column;
+  gap: calc(40 * var(--s));
+  max-width: 90.54%;                    /* 1005 / 1110 */
+}
+.dx-side {
+  display: grid;
+  grid-template-columns: minmax(0, 457fr) minmax(0, 492fr);
+  column-gap: calc(56 * var(--s));
+  align-items: start;
+  min-height: calc(199 * var(--s));     /* the Figma row's height */
+}
+.dx-side__col { display: flex; flex-direction: column; gap: calc(24 * var(--s)); }
+
+.dx-num-box {
+  display: flex;
+  gap: calc(20 * var(--s));
+  padding: calc(10 * var(--s)) calc(16 * var(--s));
+  background: var(--gray-bg);
+  border-radius: calc(4 * var(--s));
+}
+.dx-num { flex: none; font-weight: 500; font-size: var(--t20); line-height: var(--l20); color: #767885; }
+.dx-num-box .dx-lead + p { margin-top: calc(6 * var(--s)); }
+
+.dx-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(16 * var(--s)); width: 68.66%; } /* 690 / 1005 */
+.dx-stack > .dx-pair { margin-block: calc(14 * var(--s)) calc(10 * var(--s)); }
+.dx-trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: calc(16 * var(--s)); }
+.dx-stack > .dx-trio { margin-top: calc(14 * var(--s)); }
+.dx-arrows { display: flex; justify-content: space-between; padding: calc(4 * var(--s)) calc(150 * var(--s)); } /* Figma: 150 in from each side */
+.dx-arrows svg { display: block; width: calc(16 * var(--s)); height: calc(16 * var(--s)); }
+
+.dx-tint {
+  display: flex;
+  flex-direction: column;
+  gap: calc(4 * var(--s));
+  padding: calc(10 * var(--s)) calc(16 * var(--s));
+  border-radius: calc(4 * var(--s));
+}
+.dx-tint--roomy { padding: calc(15 * var(--s)) calc(20 * var(--s)); }
+.dx-tint--green  { background: var(--green-bg);  --tint: var(--green); }
+.dx-tint--purple { background: var(--purple-bg); --tint: var(--purple); }
+.dx-tint--blue   { background: var(--blue-bg);   --tint: var(--blue); }
+.dx-tint__title  { font-weight: 500; font-size: var(--t12); line-height: var(--l20); text-transform: uppercase; color: var(--tint); }
+.dx-tint__lesson { font-weight: 500; color: var(--tint); }
+
+.dx-outline {
+  padding: calc(10 * var(--s)) calc(16 * var(--s));
+  border: 1px solid var(--ink);
+  border-radius: calc(4 * var(--s));
+}
+
+.dx-goal {
+  padding: calc(10 * var(--s)) calc(16 * var(--s));
+  background: var(--green-bg);
+  border-radius: calc(4 * var(--s));
+}
+
+.dx-principles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: calc(10 * var(--s)); }
+.dx-stack > .dx-principles { margin-top: calc(16 * var(--s)); }
+
+/* six phones on a pale cyan band */
+.dx-strip {
+  display: flex;
+  justify-content: center;
+  gap: calc(20 * var(--s));
+  padding: calc(36 * var(--s)) calc(50 * var(--s));
+  background: #edfcfd;
+}
+.dx-stack > .dx-strip { margin-top: calc(10 * var(--s)); }
+.dx-strip .dx-phone { width: calc(149 * var(--s)); }
+
+.dx-phone {
+  display: block;
+  flex: none;
+  width: calc(170 * var(--s));
+  height: auto;
+  aspect-ratio: 1 / 2;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* Solution components: text (412) | 122 | phone panel (576) */
+.dx-components { display: flex; flex-direction: column; gap: calc(10 * var(--s)); }
+.dx-row {
+  display: grid;
+  grid-template-columns: minmax(0, 412fr) minmax(0, 576fr);
+  column-gap: calc(122 * var(--s));
+  align-items: start;
+}
+
+.dx-panel {
+  display: flex;
+  gap: calc(30 * var(--s));
+  padding: calc(30 * var(--s)) calc(26 * var(--s)) calc(30 * var(--s)) calc(36 * var(--s));
+  background: var(--cyan-bg);
+  border-radius: calc(4 * var(--s));
+}
+.dx-panel--roomy { gap: calc(40 * var(--s)); padding-right: calc(38 * var(--s)); }
+.dx-panel--half  { gap: calc(40 * var(--s)); padding-right: calc(54 * var(--s)); }
+
+/* captions sit at the bottom of the panel, beside the phone */
+.dx-caption {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  font-size: var(--t12);
+  line-height: var(--l18);
+}
+.dx-caption--spread { justify-content: space-between; }
+.dx-caption--gap p + p { margin-top: calc(40 * var(--s)); }
+
+/* Offer at a glance: text (378) | 46 | table (686) */
+.dx-offer {
+  display: grid;
+  grid-template-columns: minmax(0, 378fr) minmax(0, 686fr);
+  column-gap: calc(46 * var(--s));
+  align-items: center;
+}
+.dx-components > .dx-halves { margin-top: calc(14 * var(--s)); } /* 24 below the table row */
+.dx-table {
+  display: grid;
+  grid-template-columns: minmax(0, 172fr) minmax(0, 249fr) minmax(0, 249fr);
+  gap: calc(4 * var(--s)) calc(8 * var(--s));
+  font-size: var(--t12);
+  line-height: var(--l20);
+}
+.dx-th { font-style: italic; padding-left: calc(5 * var(--s)); }
+.dx-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: calc(30 * var(--s));
+  padding: 0 calc(5 * var(--s));
+  border: 1px solid var(--gray-bg);
+  border-radius: calc(4 * var(--s));
+}
+.dx-cell--feature { background: var(--gray-bg); font-weight: 500; font-size: var(--t14); }
+
+.dx-halves { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(20 * var(--s)); }
+
+.dx-list { padding-left: calc(21 * var(--s)); }
+
+.dx-takeaways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(16 * var(--s)); padding-right: calc(14 * var(--s)); }
+.dx-stack > .dx-takeaways { margin-top: calc(10 * var(--s)); }
+
+/* ---------- Samsung (Figma frame "samsung", 1150 wide) ----------
+   Same --s scale as dx-app: 1px at 1150, shrinking with the card. */
+
+.card--case .case--samsung { gap: calc(24 * var(--s)); }   /* overview → Background */
+
+@container (min-width: 700px) {
+  /* inside the 20px padding: title 474 | Timeline 125 | Scope 124 | Role 125 | Team 262 */
+  .case--samsung.case--body .case__overview { grid-template-columns: 474fr 125fr 124fr 125fr 262fr; }
+  /* Team runs a few px past its 262 column in Figma rather than wrapping */
+  body.is-collapsed .case--samsung .case__value { white-space: nowrap; }
+}
+
+.sx {
+  display: flex;
+  flex-direction: column;
+  font-size: clamp(var(--text-min), calc(14 * var(--s)), 14px);
+  line-height: clamp(var(--lh-min), calc(20 * var(--s)), 20px);
+  hyphens: none;
+  overflow-x: clip;
+}
+.sx * { min-width: 0; }
+:where(.sx) :where(p) { margin: 0; }
+.sx .case__label { margin: 0; }
+
+/* Background text 701 | 50 | city animation 323, sitting 8 above the text's last line */
+.sx-intro {
+  display: flex;
+  align-items: flex-end;
+  gap: calc(50 * var(--s));
+  padding: 0 calc(20 * var(--s));
+  margin-bottom: calc(60 * var(--s));   /* space after the last Background paragraph, before the cover band */
+}
+.sx-text { flex: 0 1 calc(704 * var(--s)); display: flex; flex-direction: column; gap: calc(4 * var(--s)); }
+.sx-text p + p { margin-top: 1lh; }   /* one blank line between paragraphs */
+.sx-video {
+  display: block;
+  flex: none;
+  width: calc(323 * var(--s));
+  aspect-ratio: 323 / 270;
+  object-fit: cover;
+  margin-bottom: calc(8 * var(--s));    /* Figma 68, moved 60 down */
+  pointer-events: none;
+  mix-blend-mode: darken;
+}
+
+/* pale band from the end of the text to the bottom: full-width deck cover image, then the graphics */
+.sx-band {
+  background: #f3f4fa;
+  padding-bottom: calc(220 * var(--s));
+}
+.sx-img { display: block; width: 100%; height: auto; }
+.sx-cover { width: 100%; }
+.sx-img--packaging { width: calc(1086 * var(--s)); }
+/* Bordered frames with transparent images, so the pale band shows through */
+.sx-frame {
+  position: relative;
+  border: 1px solid #3d3d3d;
+  border-radius: calc(20 * var(--s));
+  overflow: hidden;
+}
+.sx-targets { aspect-ratio: 1090 / 238; }
+.sx-targets span {
+  position: absolute;
+  background: url("assets/samsung/web/target-applications-clear.png") no-repeat;
+}
+/* 770 × 748 (its Figma frame is 16 taller); the image is 734 × 753, 11 in from the left, 10 above the top */
+.sx-frame--isometric { width: calc(770 * var(--s)); aspect-ratio: 770 / 748; margin-bottom: calc(16 * var(--s)); }
+.sx-frame--isometric .sx-img { position: absolute; left: 1.42%; top: -1.34%; width: 95.35%; height: 100.67%; }
+/* 1090 × 497, image filling it */
+.sx-frame--automotive { aspect-ratio: 1090 / 497; }
+.sx-frame--automotive .sx-img { width: 100%; height: 100%; object-fit: cover; }
+
+.sx-sections {
+  display: flex;
+  flex-direction: column;
+  gap: calc(36 * var(--s));
+  margin-top: calc(7 * var(--s));
+  padding: 0 calc(30 * var(--s));
+}
+.sx-section { display: flex; flex-direction: column; gap: calc(16 * var(--s)); }
+.sx-head { display: flex; justify-content: space-between; align-items: center; }
+
+/* "Light mode" tag beside the first heading */
+.sx-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(6 * var(--s));
+  padding: 0 calc(5 * var(--s));
+  border: 1px solid currentColor;
+  border-radius: calc(4 * var(--s));
+  font-size: clamp(var(--text-min), calc(12 * var(--s)), 12px);
+  line-height: clamp(var(--lh-min), calc(20 * var(--s)), 20px);
+  text-transform: uppercase;
+}
+.sx-badge svg { width: calc(16 * var(--s)); height: calc(16 * var(--s)); flex: none; }
+.sx-badge { cursor: pointer; user-select: none; }
+.sx-badge--filled { background: #3d3d3d; border-color: #3d3d3d; color: #fff; }   /* "Dark mode" */
+
+.sx-platforms:not(.is-light) .sx-when-light,
+.sx-platforms.is-light .sx-when-dark { display: none; }
+
+/* dx-app as a narrow card (scrolled, not hovered): Context, The Problem, the six app screens
+   stacked, then Takeaways, all in one column */
+@container (max-width: 699px) {
+  body.is-collapsed .case--body .dx > :not(.dx-context, .dx-split, .dx-solution, .dx-lessons),
+  body.is-collapsed .case--body .dx-split > :not(.dx-problem),
+  body.is-collapsed .case--body .dx-arrows,
+  body.is-collapsed .case--body .dx-solution > :not(.dx-strip) { display: none; }
+  body.is-collapsed .case--body .dx-split { max-width: none; }
+  body.is-collapsed .case--body :is(.dx-pair, .dx-trio, .dx-takeaways) {
+    grid-template-columns: minmax(0, 1fr);
+    width: auto;
+    padding-right: 0;
+  }
+  body.is-collapsed .case--body .dx { max-width: none; }
+  body.is-collapsed .case--body .dx-context { max-width: none; }
+  body.is-collapsed .case--body .dx-strip {
+    flex-direction: column;
+    align-items: center;
+    gap: 8cqi;
+    margin-top: 0;
+    padding: 8cqi 0;
+  }
+  body.is-collapsed .case--body .dx-strip .dx-phone { width: 70%; }
 }
 
 /* Narrow cards keep their text: sizes above scale down with the card's width
@@ -514,6 +996,7 @@ body.show-guides .projects { outline: 1px dashed var(--guide); }
 
   .statement { position: static; width: auto; font-size: 34px; }
   .statement .rest { opacity: 1; }
+  .scroll-cue { display: none; }
   .desktop-break { display: none; }
   .nav { position: static; justify-content: flex-end; gap: 20px; }
   .nav a { width: auto; }
