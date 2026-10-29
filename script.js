@@ -73,7 +73,7 @@ const PROJECTS = [
     // From the Figma frame "mkwrl"
     title: "MillerKnoll WRL Rebrand",
     eyebrow: "Branding & Identity",
-    media: { type: "video", src: "assets/miller-knoll-identity/MKWRL_thumbnail.mp4" },
+    media: { type: "video", src: "assets/miller-knoll-identity/mkwrl_thumbnail.mp4" },
     caseStudy: {
       meta: [
         { label: "Timeline", value: "April 2024" },
@@ -180,6 +180,10 @@ function caseStudyHTML(p) {
       : `<img class="case__asset" src="${url}" width="${w}" height="${h}" alt="" loading="lazy" decoding="async">`;
   };
 
+  // { grid: [...], cols } puts several files side by side (Archive)
+  const assetOrGrid = (a) =>
+    a.grid ? `<div class="case__grid" style="--cols: ${a.cols}">${a.grid.map(asset).join("")}</div>` : asset(a);
+
   const collageImg = ({ src, w, h }) =>
     `<img class="case__collage-img" src="${encodeURI(src)}" width="${w}" height="${h}" alt="" loading="lazy" decoding="async">`;
 
@@ -213,7 +217,7 @@ function caseStudyHTML(p) {
         </div>` : ""}
       </div>`}
     </div>
-    ${cs.assets ? `<div class="case__assets">${cs.assets.map(asset).join("")}</div>` : ""}`;
+    ${cs.assets ? `<div class="case__assets">${cs.assets.map(assetOrGrid).join("")}</div>` : ""}`;
 }
 
 // Project 4's write-up (Figma frame "samsung"). The image blocks are 2x exports of the Figma groups.
@@ -306,7 +310,10 @@ function mediaHTML(media) {
   return `<img src="${encodeURI(media.src)}" alt="" loading="lazy">`;
 }
 
-projectsEl.innerHTML = PROJECTS.map((p, i) => p.caseStudy ? `
+// archive.html shows the Archive projects (archive.js) with the same cards
+const isArchive = document.body.classList.contains("page-archive");
+
+projectsEl.innerHTML = (isArchive ? ARCHIVE : PROJECTS).map((p, i) => p.caseStudy ? `
   <a class="card card--case${p.link ? " card--link" : ""}" href="${p.link || `#project-${i + 1}`}"${p.link ? ` target="_blank" rel="noopener" data-label="click here to view" data-theme="blue-stacked"` : ""}>
     <div class="card__media">${mediaHTML(p.media)}</div>
     ${caseStudyHTML(p)}
@@ -358,7 +365,7 @@ function resetToEven() {
 }
 
 projectsEl.addEventListener("mouseleave", resetToEven);
-open(null);
+if (!isArchive) open(null);
 
 // ---------- header collapse on scroll ----------
 // Figma: header line at 523 / 1024 → 68 (compact "Enya Pan" bar).
@@ -368,6 +375,19 @@ let layout = { full: 523, compact: 68, topStart: 283, topEnd: 17 };
 
 function measure() {
   const u = window.innerWidth / 1440;
+
+  // Archive (Figma frame "Play"): no collapse. The header stays at its Figma size, line at 213,
+  // and the projects always show as the scrolled-down project view, one open at a time.
+  if (isArchive) {
+    root.style.setProperty("--header-h", `${213 * u}px`);
+    root.style.setProperty("--statement-top", `${53 * u}px`);
+    collapsed = true;
+    document.body.classList.add("is-collapsed");
+    if (!cards.some((c) => c.classList.contains("is-open"))) open(cards[0]);
+    // the first project starts open, without animating from equal widths
+    setTimeout(() => document.body.classList.remove("is-loading"), 100);
+    return;
+  }
   root.style.setProperty("--p", 0);
 
   const statementHeight = statement.getBoundingClientRect().height;
@@ -385,6 +405,7 @@ function measure() {
 }
 
 function update() {
+  if (isArchive) return;
   const distance = layout.full - layout.compact;
   const p = Math.min(1, Math.max(0, window.scrollY / distance));
   const lerp = (a, b) => a + (b - a) * p;
@@ -436,7 +457,7 @@ statement.addEventListener("click", (e) => {
 });
 
 // "Scroll to view": scrolls down until the header has collapsed into the project view
-document.querySelector(".scroll-cue").addEventListener("click", () => {
+document.querySelector(".scroll-cue")?.addEventListener("click", () => {
   window.scrollTo({ top: layout.full - layout.compact, behavior: "smooth" });
 });
 
