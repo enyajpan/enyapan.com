@@ -188,11 +188,9 @@ function caseStudyHTML(p) {
       return `
         <div class="case__player">
           <div class="case__player-bar">
-            <button class="case__cue" type="button" data-player="play">Play</button>
             <button class="case__cue" type="button" data-player="mute">Mute</button>
           </div>
           <video class="case__asset case__player-video" src="${url}#t=0.1" width="${w}" height="${h}" playsinline disablepictureinpicture disableremoteplayback preload="metadata" tabindex="-1"></video>
-          <button class="case__play" type="button" aria-label="Play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5L8 5.5Z"/></svg></button>
         </div>`;
     }
     return `<video class="case__asset" data-src="${url}" width="${w}" height="${h}" autoplay muted loop playsinline disablepictureinpicture disableremoteplayback preload="none" tabindex="-1" aria-hidden="true"></video>`;
@@ -362,7 +360,7 @@ function mediaHTML(media) {
 const isArchive = document.body.classList.contains("page-archive");
 
 projectsEl.innerHTML = (isArchive ? ARCHIVE : isAbout ? [] : PROJECTS).map((p, i) => p.caseStudy ? `
-  <a class="card card--case${p.link ? " card--link" : ""}" href="${p.link || `#project-${i + 1}`}"${p.media?.openHeight ? ` style="--open-media: ${p.media.openHeight}"` : ""}${p.link ? ` target="_blank" rel="noopener" data-label="click here to view" data-theme="blue-stacked"` : ""}>
+  <a class="card card--case${p.link ? " card--link" : ""}" href="${p.link || `#project-${i + 1}`}"${p.media?.openHeight ? ` style="--open-media: ${p.media.openHeight}"` : ""}${p.link ? ` target="_blank" rel="noopener"` : ""}>
     <div class="card__media"${p.media?.bg ? ` style="background: ${p.media.bg}"` : ""}>${mediaHTML(p.media)}</div>
     ${caseStudyHTML(p)}
   </a>
@@ -428,15 +426,20 @@ setTimeout(() => document.body.classList.remove("is-loading"), 100);
 //   Work      Enya Pan is a designer and research [bunny] enthusiast who loves to play.
 //   Archive   Enya Pan is a research [bunny] enthusiast who loves to play.
 //   scrolled  Enya loves to play.   (Archive)      Enya Pan   (Work, the rest fades out)
-//   About     Enya Pan is
+//   About     Enya Pan is, then on a loop: … a designer. → a tinkerer. → a [visual, data] storyteller. → (back to "is")
 
-const SEGS = ["enya", "pan", "is", "a", "designer", "research", "enthusiast", "who", "loves"];
+const SEGS = ["enya", "pan", "is", "a", "designer", "designer-dot", "tinkerer", "tinkerer-dot", "storyteller", "storyteller-dot",
+  "and", "research", "enthusiast", "who", "loves"];
+const ABOUT_ONLY = ["designer-dot", "tinkerer", "tinkerer-dot", "storyteller", "storyteller-dot"];
 const HEADLINES = {
-  work: SEGS,
+  work: SEGS.filter((s) => !ABOUT_ONLY.includes(s)),
   "work-collapsed": ["enya", "pan"],
-  archive: SEGS.filter((s) => s !== "designer"),
+  archive: SEGS.filter((s) => !ABOUT_ONLY.includes(s) && s !== "designer" && s !== "and"),
   "archive-collapsed": ["enya", "loves"],
   about: ["enya", "pan", "is"],
+  "about-designer": ["enya", "pan", "is", "a", "designer", "designer-dot"],
+  "about-tinkerer": ["enya", "pan", "is", "a", "tinkerer", "tinkerer-dot"],
+  "about-storyteller": ["enya", "pan", "is", "a", "storyteller", "storyteller-dot"],
 };
 
 const headline = (() => {
@@ -481,6 +484,7 @@ const headline = (() => {
       stop();
       const keep = HEADLINES[state];
       segs.forEach((seg) => { seg.shown = keep.includes(seg.name) ? seg.units.length : 0; render(seg); });
+      statement.classList.add("is-ready"); // the About-only words are hidden in the HTML until now
     },
     // backspace / type from what's showing now to a state
     // speed: 1.5 types / backspaces one and a half times as fast
@@ -505,8 +509,23 @@ const headline = (() => {
   };
 })();
 
+// About: after "Enya Pan is", the headline cycles through what's in the list below it
+const ABOUT_LOOP = ["about-designer", "about-tinkerer", "about-storyteller", "about"];
+let aboutState = "about";
+function aboutLoop(i = 0) {
+  const state = ABOUT_LOOP[i % ABOUT_LOOP.length];
+  headline.animate(state, {
+    delay: 0,
+    onStep: () => measure(),
+    onDone: () => {
+      aboutState = state;
+      setTimeout(() => aboutLoop(i + 1), state === "about" ? 300 : 1600); // each one stays up a moment
+    },
+  });
+}
+
 const pageHeadline = () =>
-  isAbout ? "about" : isArchive ? (collapsed ? "archive-collapsed" : "archive") : progress >= 0.5 ? "work-collapsed" : "work";
+  isAbout ? aboutState : isArchive ? (collapsed ? "archive-collapsed" : "archive") : progress >= 0.5 ? "work-collapsed" : "work";
 
 // Leaving through the header links: remember how the headline looks, so the next page can start
 // from it (same words, same size) — the page change then morphs it in place before the typing.
@@ -524,21 +543,27 @@ let arrivingFrom = null;
 try { arrivingFrom = JSON.parse(sessionStorage.getItem("headline-from")); sessionStorage.removeItem("headline-from"); } catch {}
 if (arrivingFrom && HEADLINES[arrivingFrom.state] && arrivingFrom.state !== pageHeadline()) {
   headline.set(arrivingFrom.state);
-  if (window.innerWidth > 760) {
+  // Work: its own width and line breaks from the start, so the typing wraps after "and" and "enthusiast"
+  // like the finished headline. Archive / About: never wider than their own headline.
+  const isWork = !isArchive && !isAbout;
+  if (window.innerWidth > 760 && !isWork) {
     const font = parseFloat(getComputedStyle(statement).fontSize);
-    statement.style.width = `${(arrivingFrom.width * font) / arrivingFrom.font}px`;
+    const own = statement.getBoundingClientRect().width;
+    statement.style.width = `${Math.min((arrivingFrom.width * font) / arrivingFrom.font, own)}px`;
   }
-  statement.classList.add("is-retyping");
+  if (!isWork) statement.classList.add("is-retyping");
   const settle = () => {
     statement.style.width = "";
     statement.classList.remove("is-retyping");
     measure();
+    if (isAbout) aboutLoop();
   };
   // About → Work types the most, so it goes 1.5× as fast
-  const speed = arrivingFrom.state === "about" && pageHeadline() === "work" ? 1.5 : 1;
+  const speed = arrivingFrom.state.startsWith("about") && pageHeadline() === "work" ? 1.5 : 1;
   setTimeout(() => headline.animate(pageHeadline(), { delay: 0, speed, onStep: () => measure(), onDone: settle }), 800);
 } else {
   headline.set(pageHeadline());
+  if (isAbout) setTimeout(aboutLoop, 800);
 }
 
 // ---------- header collapse on scroll ----------
@@ -650,7 +675,7 @@ const openTextLink = (e) => {
 projectsEl.addEventListener("click", openTextLink, true);
 projectsEl.addEventListener("keydown", openTextLink, true);
 
-// "Scroll to view" under a thumbnail, and the Play / Mute buttons of a video player (Archive).
+// "Scroll to view" under a thumbnail, and a video player (Archive): a click on the film plays / pauses it, Mute mutes it.
 // The card is a link, so these clicks are handled here and go no further.
 projectsEl.addEventListener("click", (e) => {
   const cue = e.target.closest(".case__scroll");
@@ -675,8 +700,6 @@ projectsEl.addEventListener("click", (e) => {
 document.querySelectorAll(".case__player-video").forEach((video) => {
   const bar = video.parentElement.querySelector(".case__player-bar");
   const sync = () => {
-    video.parentElement.classList.toggle("is-playing", !video.paused); // hides the play button
-    bar.querySelector('[data-player="play"]').textContent = video.paused ? "Play" : "Pause";
     bar.querySelector('[data-player="mute"]').textContent = video.muted ? "Unmute" : "Mute";
   };
   ["play", "pause", "volumechange", "ended"].forEach((type) => video.addEventListener(type, sync));
@@ -686,11 +709,6 @@ projectsEl.addEventListener("keydown", toggleSamsungMode, true);
 statement.addEventListener("click", (e) => {
   e.preventDefault();
   window.scrollTo({ top: 0, behavior: "smooth" });
-});
-
-// "Scroll to view": scrolls down until the header has collapsed into the project view
-document.querySelector(".scroll-cue")?.addEventListener("click", () => {
-  window.scrollTo({ top: layout.full - layout.compact, behavior: "smooth" });
 });
 
 // ---------- press "g" to toggle red gutter guides ----------
@@ -724,7 +742,7 @@ function labelIsAvailable(el) {
 }
 
 function renderHoverLabel() {
-  const show = hoveredEl && labelIsAvailable(hoveredEl);
+  const show = hoveredEl && labelIsAvailable(hoveredEl) && !textCursor.textContent; // the big cursor text wins
   hoverLabel.classList.toggle("is-visible", Boolean(show));
   if (!show) return;
   hoverLabel.textContent = hoveredEl.dataset.label;
@@ -743,6 +761,60 @@ document.querySelectorAll("[data-label]").forEach((el) => {
 });
 
 bunnyVideo?.addEventListener("timeupdate", renderHoverLabel); // no bunny on About
+
+// ---------- big cursor text ----------
+// Over a project's cover the cursor becomes "Scroll to view" (Figma frame "cursor-hover"), anywhere
+// over a project that links out (Formel) "Click to view", and over
+// the Archive film "Play" / "Pause" (a click plays or pauses it). Elsewhere it's the usual cursor.
+
+const textCursor = document.createElement("div");
+textCursor.className = "text-cursor";
+textCursor.setAttribute("aria-hidden", "true");
+document.body.appendChild(textCursor);
+const finePointer = matchMedia("(hover: hover) and (pointer: fine)");
+
+function cursorTextFor(el) {
+  // videos don't take the pointer (style.css), so it's the film's box under the pointer that counts
+  const film = el?.closest?.(".case__player")?.querySelector("video");
+  const box = film?.getBoundingClientRect();
+  if (box && cursor.y >= box.top && cursor.y <= box.bottom) return film.paused ? "Play" : "Pause";
+  if (el?.closest?.(".projects .card--link")) return "Click\nto view"; // Formel links out: the whole card (Figma "click-hover")
+  // top of the page: the whole project, title and all; once scrolled: only its cover
+  if (el?.closest?.(collapsed ? ".projects .card__media" : ".projects .card")) return "Scroll\nto view";
+  return "";
+}
+
+function renderTextCursor() {
+  const el = cursor.inside && finePointer.matches ? document.elementFromPoint(cursor.x, cursor.y) : null;
+  const text = cursorTextFor(el);
+  if (textCursor.textContent !== text) textCursor.textContent = text;
+  textCursor.dataset.kind = text.split("\n")[0].toLowerCase(); // colour per word (style.css)
+  document.body.classList.toggle("has-text-cursor", Boolean(text));
+  if (!text) return;
+  // centred on the pointer, kept inside the window
+  const w = textCursor.offsetWidth;
+  const h = textCursor.offsetHeight;
+  const x = Math.min(Math.max(cursor.x, w / 2), innerWidth - w / 2);
+  const y = Math.min(Math.max(cursor.y, h / 2), innerHeight - h / 2);
+  textCursor.style.transform = `translate(${x - w / 2}px, ${y - h / 2}px)`;
+}
+
+document.addEventListener("mousemove", (e) => {
+  cursor.x = e.clientX;
+  cursor.y = e.clientY;
+  cursor.inside = true;
+  renderTextCursor();
+  renderHoverLabel();
+});
+document.documentElement.addEventListener("mouseleave", () => {
+  cursor.inside = false;
+  renderTextCursor();
+});
+window.addEventListener("scroll", renderTextCursor, { passive: true });
+document.querySelectorAll(".card").forEach((card) => card.addEventListener("scroll", renderTextCursor, { passive: true }));
+document.querySelectorAll(".case__player-video").forEach((video) => {
+  ["play", "pause", "ended"].forEach((type) => video.addEventListener(type, renderTextCursor));
+});
 window.addEventListener("scroll", renderHoverLabel, { passive: true });
 
 // ---------- blurred preview while a video loads ----------
@@ -763,6 +835,29 @@ document.querySelectorAll("video").forEach((video) => {
   if (video.readyState >= 2) return;
   video.classList.add("is-preview");
   video.addEventListener("loadeddata", () => video.classList.remove("is-preview"), { once: true });
+});
+
+// Images the same way: each has a tiny copy at <folder>/web/<name>-blur.jpg (.png for PNGs, to keep
+// transparency), shown blurred behind it until the image itself has loaded.
+const blurFor = (src) => {
+  const path = decodeURI(src);
+  const slash = path.lastIndexOf("/");
+  const name = path.slice(slash + 1);
+  return encodeURI(`${path.slice(0, slash).replace(/\/web$/, "")}/web/${name.replace(/\.\w+$/, "")}-blur.${/\.png$/i.test(name) ? "png" : "jpg"}`);
+};
+
+document.querySelectorAll("img").forEach((img) => {
+  const src = img.getAttribute("src");
+  if (!src?.startsWith("assets/") || (img.complete && img.naturalWidth)) return;
+  img.style.backgroundImage = `url("${blurFor(src)}")`;
+  img.style.backgroundPosition = img.style.objectPosition;
+  img.classList.add("is-preview");
+  const done = () => {
+    img.classList.remove("is-preview");
+    img.style.backgroundImage = "";
+  };
+  img.addEventListener("load", done, { once: true });
+  img.addEventListener("error", done, { once: true });
 });
 
 // ---------- thumbnails with sound (Archive: Everything I Once Knew) ----------
