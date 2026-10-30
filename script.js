@@ -119,7 +119,7 @@ const PROJECTS = [
     },
   },
   {
-    // From the Figma frame "formel". No write-up: once scrolled, the card doesn't open and links out instead.
+    // From the Figma frame "formel". No write-up: it opens like the others, and a click links out.
     title: "Formel Skin",
     eyebrow: "Brand &amp; Marketing",
     media: { type: "video", src: "assets/formel/formel_thumbnail.mp4" },
@@ -390,8 +390,6 @@ projectsEl.innerHTML = (isArchive ? ARCHIVE : isAbout ? [] : PROJECTS).map((p, i
 const cards = [...projectsEl.querySelectorAll(".card")];
 
 function open(card) {
-  // once scrolled, a project that links out (Formel) stays narrow and the open project stays open
-  if (collapsed && card.classList.contains("card--link")) return;
   cards.forEach((c) => c.classList.toggle("is-open", c === card));
   // a video the viewer started stops when its project closes, and a thumbnail's sound goes off
   document.querySelectorAll(".card:not(.is-open) .case__player-video").forEach((v) => v.pause());
