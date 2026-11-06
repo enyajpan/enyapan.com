@@ -747,11 +747,14 @@ img.is-preview { background: center / cover no-repeat; } /* the tiny copy (set i
   --t24: clamp(var(--text-min), calc(24 * var(--s)), 24px);
   --l18: clamp(var(--lh-min), calc(18 * var(--s)), 18px);
   --l20: clamp(var(--lh-min), calc(20 * var(--s)), 20px);
+  --t46: clamp(var(--text-min), calc(46 * var(--s)), 46px);
   --l22: clamp(var(--lh-min), calc(22 * var(--s)), 22px);
+  --l24: clamp(var(--lh-min), calc(24 * var(--s)), 24px);
   --l30: clamp(var(--lh-min), calc(30 * var(--s)), 30px);
-  --green: #5e9900;  --green-bg: #e1f1ab;
-  --purple: #c107ff; --purple-bg: #faebff;
-  --blue: #0062ff;   --blue-bg: #d8e7ff;
+  --l46: clamp(var(--lh-min), calc(46 * var(--s)), 46px);
+  --red: #e91401;    --red-bg: rgba(231, 21, 1, 0.09);
+  --teal: #47a294;   --teal-bg: #e5f6f7;
+  --purple: #a84fc5; --purple-bg: #faebff;
   --gray-bg: #e9eaf0;
   --cyan-bg: #ebfbfc;
 
@@ -771,9 +774,8 @@ img.is-preview { background: center / cover no-repeat; } /* the tiny copy (set i
 .dx strong { font-weight: 500; }
 .dx .case__label { margin: 0; }
 
-.dx-green  { color: var(--green); }
-.dx-purple { color: var(--purple); }
-.dx-blue   { color: var(--blue); }
+/* the thin rule above each section (1005 wide); the 40px gaps either side come from .dx */
+.dx-rule { width: 90.54%; margin: 0; border: 0; border-top: 1px solid #d9d9d9; }
 
 /* label, then text, 4px apart */
 .dx-stack { display: flex; flex-direction: column; }
@@ -782,39 +784,29 @@ img.is-preview { background: center / cover no-repeat; } /* the tiny copy (set i
 
 .dx-lead { font-size: var(--t18); line-height: var(--l22); }
 .dx-heading { font-size: var(--t24); line-height: var(--l30); font-weight: 400; }
+.dx-heading--num { padding-left: calc(8 * var(--s)); }   /* "1. Demand Heat Maps": a numbered list in Figma */
+.dx-overview { max-width: 58.65%; }   /* 651 / 1110 */
 .dx-text p + p, .dx-caption p + p, .dx-after-blank { margin-top: 1lh; } /* one blank line */
 
-/* The Problem (1005 wide), then 40 below: Opportunity (457) | 56 | Goal and Guardrail (492) */
-.dx-split {
-  display: flex;
-  flex-direction: column;
-  gap: calc(40 * var(--s));
-  max-width: 90.54%;                    /* 1005 / 1110 */
-}
-.dx-side {
-  display: grid;
-  grid-template-columns: minmax(0, 457fr) minmax(0, 492fr);
-  column-gap: calc(56 * var(--s));
-  align-items: start;
-  min-height: calc(199 * var(--s));     /* the Figma row's height */
-}
-.dx-side__col { display: flex; flex-direction: column; gap: calc(24 * var(--s)); }
+/* The Problem (1005 wide) */
+.dx-problem { max-width: 90.54%; }
 
+/* numbered boxes: a big number, then the text */
 .dx-num-box {
   display: flex;
-  gap: calc(20 * var(--s));
+  gap: calc(24 * var(--s));
   padding: calc(10 * var(--s)) calc(16 * var(--s));
-  background: var(--gray-bg);
-  border-radius: calc(4 * var(--s));
 }
-.dx-num { flex: none; font-weight: 500; font-size: var(--t20); line-height: var(--l20); color: #767885; }
+.dx-num { flex: none; font-size: var(--t46); line-height: var(--l46); }
 .dx-num-box .dx-lead + p { margin-top: calc(6 * var(--s)); }
 
-.dx-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(16 * var(--s)); width: 68.66%; } /* 690 / 1005 */
-.dx-stack > .dx-pair { margin-block: calc(14 * var(--s)) calc(10 * var(--s)); }
+/* the two ways Dashers lose an offer, 24 apart, 50 in from each side */
+.dx-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(24 * var(--s)); padding: calc(10 * var(--s)) calc(50 * var(--s)); }
+.dx-pair .dx-num-box p { font-size: var(--t18); line-height: var(--l24); }
 .dx-trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: calc(16 * var(--s)); }
 .dx-stack > .dx-trio { margin-top: calc(14 * var(--s)); }
-.dx-arrows { display: flex; justify-content: space-between; padding: calc(4 * var(--s)) calc(150 * var(--s)); } /* Figma: 150 in from each side */
+/* an arrow under the middle of each box */
+.dx-arrows { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: calc(16 * var(--s)); justify-items: center; padding-block: calc(4 * var(--s)); }
 .dx-arrows svg { display: block; width: calc(16 * var(--s)); height: calc(16 * var(--s)); }
 
 .dx-tint {
@@ -824,12 +816,10 @@ img.is-preview { background: center / cover no-repeat; } /* the tiny copy (set i
   padding: calc(10 * var(--s)) calc(16 * var(--s));
   border-radius: calc(4 * var(--s));
 }
-.dx-tint--roomy { padding: calc(15 * var(--s)) calc(20 * var(--s)); }
-.dx-tint--green  { background: var(--green-bg);  --tint: var(--green); }
+.dx-tint--red    { background: var(--red-bg);    --tint: var(--red); }
+.dx-tint--teal   { background: var(--teal-bg);   --tint: var(--teal); }
 .dx-tint--purple { background: var(--purple-bg); --tint: var(--purple); }
-.dx-tint--blue   { background: var(--blue-bg);   --tint: var(--blue); }
 .dx-tint__title  { font-weight: 500; font-size: var(--t12); line-height: var(--l20); text-transform: uppercase; color: var(--tint); }
-.dx-tint__lesson { font-weight: 500; color: var(--tint); }
 
 .dx-outline {
   padding: calc(10 * var(--s)) calc(16 * var(--s));
@@ -837,14 +827,21 @@ img.is-preview { background: center / cover no-repeat; } /* the tiny copy (set i
   border-radius: calc(4 * var(--s));
 }
 
-.dx-goal {
-  padding: calc(10 * var(--s)) calc(16 * var(--s));
-  background: var(--green-bg);
+/* The Opportunity: a grey box (24 / 16 padding), then 24 below, Our Goal | Guardrail (503 each, 99 tall) */
+.dx-opportunity { display: flex; flex-direction: column; gap: calc(24 * var(--s)); max-width: 90.54%; }
+.dx-callout {
+  display: flex;
+  flex-direction: column;
+  gap: calc(10 * var(--s));
+  padding: calc(24 * var(--s)) calc(16 * var(--s));
+  background: var(--gray-bg);
   border-radius: calc(4 * var(--s));
 }
+.dx-goals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; min-height: calc(99 * var(--s)); }
+.dx-goals > :first-child { padding-right: calc(40 * var(--s)); }
 
 .dx-principles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: calc(10 * var(--s)); }
-.dx-stack > .dx-principles { margin-top: calc(16 * var(--s)); }
+.dx-stack > .dx-principles { margin-top: calc(24 * var(--s)); }
 
 /* six phones on a pale cyan band */
 .dx-strip {
@@ -854,7 +851,7 @@ img.is-preview { background: center / cover no-repeat; } /* the tiny copy (set i
   padding: calc(36 * var(--s)) calc(50 * var(--s));
   background: #edfcfd;
 }
-.dx-stack > .dx-strip { margin-top: calc(10 * var(--s)); }
+.dx-stack > .dx-strip { margin-top: calc(24 * var(--s)); }
 .dx-strip .dx-phone { width: calc(149 * var(--s)); }
 
 .dx-phone {
@@ -879,12 +876,12 @@ img.is-preview { background: center / cover no-repeat; } /* the tiny copy (set i
 .dx-panel {
   display: flex;
   gap: calc(30 * var(--s));
-  padding: calc(30 * var(--s)) calc(26 * var(--s)) calc(30 * var(--s)) calc(36 * var(--s));
+  padding: calc(30 * var(--s)) calc(54 * var(--s)) calc(30 * var(--s)) calc(36 * var(--s));
   background: var(--cyan-bg);
   border-radius: calc(4 * var(--s));
 }
-.dx-panel--roomy { gap: calc(40 * var(--s)); padding-right: calc(38 * var(--s)); }
-.dx-panel--half  { gap: calc(40 * var(--s)); padding-right: calc(54 * var(--s)); }
+.dx-panel--roomy,
+.dx-panel--half  { gap: calc(40 * var(--s)); }
 
 /* captions sit at the bottom of the panel, beside the phone */
 .dx-caption {
@@ -931,8 +928,9 @@ img.is-preview { background: center / cover no-repeat; } /* the tiny copy (set i
 
 .dx-list { padding-left: calc(21 * var(--s)); }
 
+/* two lessons, 16 apart: a heading, then 16 below, the text */
 .dx-takeaways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(16 * var(--s)); padding-right: calc(14 * var(--s)); }
-.dx-stack > .dx-takeaways { margin-top: calc(10 * var(--s)); }
+.dx-lesson { display: flex; flex-direction: column; gap: calc(16 * var(--s)); }
 
 /* ---------- Samsung (Figma frame "samsung", 1150 wide) ----------
    Same --s scale as dx-app: 1px at 1150, shrinking with the card. */
@@ -978,6 +976,9 @@ img.is-preview { background: center / cover no-repeat; } /* the tiny copy (set i
   pointer-events: none;
   mix-blend-mode: darken;
 }
+/* in the narrow strip once another project opens: no animation, and the text takes the whole width */
+.card:not(.is-open) .sx-video { display: none; }
+.card:not(.is-open) .sx-text { flex: 1 1 auto; }
 
 /* pale band from the end of the text to the bottom: full-width deck cover image, then the graphics */
 .sx-band {
@@ -1038,15 +1039,14 @@ img.is-preview { background: center / cover no-repeat; } /* the tiny copy (set i
 /* dx-app as a narrow card (scrolled, not hovered): Context, The Problem, the six app screens
    stacked, then Takeaways, all in one column */
 @container (max-width: 699px) {
-  body.is-collapsed .case--body .dx > :not(.dx-context, .dx-split, .dx-solution, .dx-lessons),
-  body.is-collapsed .case--body .dx-split > :not(.dx-problem),
+  body.is-collapsed .case--body .dx > :not(.dx-context, .dx-problem, .dx-solution, .dx-lessons),
   body.is-collapsed .case--body .dx-arrows,
   body.is-collapsed .case--body .dx-solution > :not(.dx-strip) { display: none; }
-  body.is-collapsed .case--body .dx-split { max-width: none; }
+  body.is-collapsed .case--body .dx-problem { max-width: none; }
   body.is-collapsed .case--body :is(.dx-pair, .dx-trio, .dx-takeaways) {
     grid-template-columns: minmax(0, 1fr);
     width: auto;
-    padding-right: 0;
+    padding-inline: 0;
   }
   body.is-collapsed .case--body .dx { max-width: none; }
   body.is-collapsed .case--body .dx-context { max-width: none; }
