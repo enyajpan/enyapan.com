@@ -47,7 +47,9 @@ const PROJECTS = [
       // Shown one after another, in order. w / h keep the layout steady while files load.
       assets: [
         // the trailer: Mute above it, "Play" / "Pause" cursor over it, plays with sound on click
-        { src: "assets/in-case-of-loss/DP_trailer.mp4", w: 1512, h: 1080, player: true, caption: "Trailer" },
+        // height: Figma px tall, centered (Figma "in-case-of-loss"); poster: shown until Play is pressed
+        { src: "assets/in-case-of-loss/DP_trailer.mp4", w: 1512, h: 1080, player: true, caption: "Trailer", height: 621,
+          poster: "assets/in-case-of-loss/DP_trailer_thumbnail.jpeg" },
         { src: "assets/in-case-of-loss/web/01.jpg", w: 2300, h: 1643 },
         { src: "assets/in-case-of-loss/02.mp4", w: 2560, h: 1440 },
         { src: "assets/in-case-of-loss/03.mp4", w: 2560, h: 1440 },
@@ -180,7 +182,7 @@ const CHEVRON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" ari
 
 function caseStudyHTML(p) {
   const cs = p.caseStudy;
-  const asset = ({ src, w, h, player, caption }) => {
+  const asset = ({ src, w, h, player, caption, poster, height }) => {
     const url = encodeURI(src);
     if (!src.endsWith(".mp4")) {
       return `<img class="case__asset" src="${url}" width="${w}" height="${h}" alt="" loading="lazy" decoding="async">`;
@@ -188,11 +190,11 @@ function caseStudyHTML(p) {
     if (player) {
       // only the first frame loads (#t=0.1) until the viewer presses Play
       return `
-        <div class="case__player">
+        <div class="case__player${height ? " case__player--fit" : ""}"${height ? ` style="--fit-h: ${height}; --ar: ${w / h}"` : ""}>
           <div class="case__player-bar">
             <button class="case__cue" type="button" data-player="mute">Mute</button>
           </div>
-          <video class="case__asset case__player-video" src="${url}#t=0.1" width="${w}" height="${h}" playsinline disablepictureinpicture disableremoteplayback preload="metadata" tabindex="-1"></video>
+          <video class="case__asset case__player-video" src="${poster ? url : `${url}#t=0.1`}"${poster ? ` poster="${encodeURI(poster)}" data-poster` : ""} width="${w}" height="${h}" playsinline disablepictureinpicture disableremoteplayback preload="${poster ? "none" : "metadata"}" tabindex="-1"></video>
           ${caption ? `<p class="case__label case__caption">${caption}</p>` : ""}
         </div>`;
     }
@@ -682,7 +684,12 @@ projectsEl.addEventListener("keydown", openTextLink, true);
 // The card is a link, so these clicks are handled here and go no further.
 projectsEl.addEventListener("click", (e) => {
   const cue = e.target.closest(".case__scroll");
-  const player = e.target.closest(".case__player");
+  let player = e.target.closest(".case__player");
+  // a centered film: only the film itself (and Mute) answer, not the white space beside it
+  if (player && !e.target.closest("[data-player]")) {
+    const box = player.querySelector("video").getBoundingClientRect();
+    if (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom) player = null;
+  }
   if (!cue && !player) return;
   e.preventDefault();
   e.stopPropagation();
@@ -780,7 +787,7 @@ function cursorTextFor(el) {
   // videos don't take the pointer (style.css), so it's the film's box under the pointer that counts
   const film = el?.closest?.(".case__player")?.querySelector("video");
   const box = film?.getBoundingClientRect();
-  if (box && cursor.y >= box.top && cursor.y <= box.bottom) return film.paused ? "Play" : "Pause";
+  if (box && cursor.y >= box.top && cursor.y <= box.bottom && cursor.x >= box.left && cursor.x <= box.right) return film.paused ? "Play" : "Pause";
   if (el?.closest?.(".projects .card--link")) return "Click\nto view"; // Formel links out: the whole card (Figma "click-hover")
   // top of the page: the whole project, title and all; once scrolled: only its cover
   if (el?.closest?.(collapsed ? ".projects .card__media" : ".projects .card")) return "Scroll\nto view";
@@ -833,7 +840,7 @@ const posterFor = (src) => {
 
 document.querySelectorAll("video").forEach((video) => {
   const src = video.getAttribute("src") || video.dataset.src;
-  if (!src || video.closest(".bunny") || video.dataset.enc) return;
+  if (!src || video.closest(".bunny") || video.dataset.enc || "poster" in video.dataset) return;
   video.poster = posterFor(src);
   if (video.readyState >= 2) return;
   video.classList.add("is-preview");

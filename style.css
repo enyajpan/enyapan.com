@@ -662,6 +662,20 @@ body:not(.is-collapsed) .case__scroll { display: none; }   /* the film shows onl
   padding: 0 1.739cqi 8px 0;  /* above the film, 20px in from its right edge (Figma) */
 }
 
+/* a played video of a set height (Figma px), centered; Mute stays 20px in from the film's right edge */
+.case__player--fit .case__player-video {
+  display: block;
+  height: calc(var(--fit-h) * 0.08696cqi);
+  width: auto;
+  max-width: 100%;
+  margin: 0 auto;
+  object-fit: contain;
+  background: none;
+}
+.case__player--fit .case__player-bar {
+  padding-right: calc((100cqi - var(--fit-h) * var(--ar) * 0.08696cqi) / 2 + 1.739cqi);
+}
+
 /* a caption row under a played video (Figma: 10px / 20px padding) */
 .case__player .case__caption { margin: 0; padding: 0.87cqi 1.739cqi; }
 
