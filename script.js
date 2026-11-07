@@ -807,6 +807,90 @@ function renderTextCursor() {
   const x = Math.min(Math.max(cursor.x, w / 2), innerWidth - w / 2);
   const y = Math.min(Math.max(cursor.y, h / 2), innerHeight - h / 2);
   textCursor.style.transform = `translate(${x - w / 2}px, ${y - h / 2}px)`;
+  // each cursor has a colour for light backgrounds and a lighter one where what's under it is dark
+  textCursor.classList.toggle("is-on-dark", isDarkUnder(el, { left: x - w / 2, top: y - h / 2, width: w, height: h }));
+}
+
+// How dark it is under the cursor text: the picture there (an image, a video's current frame, or its
+// poster before Play), scaled down to a few pixels and averaged; with no picture, the background colour.
+const shade = document.createElement("canvas");
+shade.width = shade.height = 6;
+const shadeCtx = shade.getContext("2d", { willReadFrequently: true });
+const posterImgs = new Map();
+const DARK = 110; // average brightness (0–255) below which the background counts as dark
+
+const brightness = (r, g, b) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+// the picture to read for an <img> / <video>, with its natural size (null if nothing to read yet)
+function pictureOf(media) {
+  if (media.tagName === "IMG") return media.complete && media.naturalWidth ? [media, media.naturalWidth, media.naturalHeight] : null;
+  const usePoster = media.readyState < 2 || (media.poster && media.hasAttribute("data-poster") && !("started" in media.dataset));
+  if (!usePoster) return [media, media.videoWidth, media.videoHeight];
+  if (!media.poster) return null;
+  let img = posterImgs.get(media.poster);
+  if (!img) {
+    img = new Image();
+    img.src = media.poster;
+    img.onload = renderTextCursor;
+    posterImgs.set(media.poster, img);
+  }
+  return img.complete && img.naturalWidth ? [img, img.naturalWidth, img.naturalHeight] : null;
+}
+
+// where the picture is drawn inside the element's box (object-fit cover / contain / fill)
+function contentBox(media, box, sw, sh) {
+  const style = getComputedStyle(media);
+  const fit = style.objectFit;
+  if (fit === "fill" || !sw || !sh) return box;
+  const k = fit === "cover" ? Math.max(box.width / sw, box.height / sh) : Math.min(box.width / sw, box.height / sh);
+  const width = sw * k;
+  const height = sh * k;
+  const [px, py] = style.objectPosition.split(" ").map((v) => (v.endsWith("%") ? parseFloat(v) / 100 : 0.5));
+  return { left: box.left + (box.width - width) * px, top: box.top + (box.height - height) * py, width, height };
+}
+
+function mediaUnder(el) {
+  const scope = el.closest(".card, .case__player") || document;
+  const hits = [...scope.querySelectorAll("img, video")].filter((m) => {
+    const r = m.getBoundingClientRect();
+    return r.width && cursor.x >= r.left && cursor.x <= r.right && cursor.y >= r.top && cursor.y <= r.bottom
+      && getComputedStyle(m).visibility !== "hidden" && m.closest("[hidden]") === null;
+  });
+  return hits[hits.length - 1]; // the one drawn on top
+}
+
+function backgroundIsDark(el) {
+  for (let n = el; n && n !== document.documentElement; n = n.parentElement) {
+    const m = getComputedStyle(n).backgroundColor.match(/[\d.]+/g);
+    if (m && (m[3] === undefined || +m[3] > 0.5)) return brightness(+m[0], +m[1], +m[2]) < DARK;
+  }
+  return false;
+}
+
+function isDarkUnder(el, area) {
+  if (!el) return false;
+  const media = mediaUnder(el);
+  const picture = media && pictureOf(media);
+  if (!picture) return backgroundIsDark(el);
+  const [source, sw, sh] = picture;
+  const box = contentBox(media, media.getBoundingClientRect(), sw, sh);
+  const sx = ((area.left - box.left) / box.width) * sw;
+  const sy = ((area.top - box.top) / box.height) * sh;
+  try {
+    shadeCtx.clearRect(0, 0, 6, 6);
+    shadeCtx.drawImage(source, sx, sy, (area.width / box.width) * sw, (area.height / box.height) * sh, 0, 0, 6, 6);
+    const px = shadeCtx.getImageData(0, 0, 6, 6).data;
+    let sum = 0;
+    let n = 0;
+    for (let i = 0; i < px.length; i += 4) {
+      if (!px[i + 3]) continue; // outside the picture
+      sum += brightness(px[i], px[i + 1], px[i + 2]);
+      n++;
+    }
+    return n > 0 ? sum / n < DARK : backgroundIsDark(el);
+  } catch {
+    return backgroundIsDark(el);
+  }
 }
 
 document.addEventListener("mousemove", (e) => {
@@ -823,8 +907,11 @@ document.documentElement.addEventListener("mouseleave", () => {
 window.addEventListener("scroll", renderTextCursor, { passive: true });
 document.querySelectorAll(".card").forEach((card) => card.addEventListener("scroll", renderTextCursor, { passive: true }));
 document.querySelectorAll(".case__player-video").forEach((video) => {
-  ["play", "pause", "ended"].forEach((type) => video.addEventListener(type, renderTextCursor));
+  video.addEventListener("play", () => { video.dataset.started = ""; }, { once: true });
+  ["play", "pause", "ended", "timeupdate", "seeked"].forEach((type) => video.addEventListener(type, renderTextCursor)); // timeupdate: the frame under the cursor changes
 });
+// covers keep playing under a still pointer, so the light / dark colour is checked a few times a second
+setInterval(() => { if (document.body.classList.contains("has-text-cursor")) renderTextCursor(); }, 250);
 window.addEventListener("scroll", renderHoverLabel, { passive: true });
 
 // ---------- blurred preview while a video loads ----------

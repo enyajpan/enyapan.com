@@ -216,9 +216,14 @@ a { color: inherit; text-decoration: none; }
   visibility: hidden;
 }
 body.has-text-cursor .text-cursor { visibility: visible; }
+/* each colour has a lighter one for when what's under the cursor is dark (.is-on-dark, set in script.js) */
+.text-cursor.is-on-dark { color: #f0c2ff; }
 .text-cursor[data-kind="play"],
-.text-cursor[data-kind="pause"] { color: #e1f1ab; }
+.text-cursor[data-kind="pause"] { color: #94d132; }
+.text-cursor.is-on-dark[data-kind="play"],
+.text-cursor.is-on-dark[data-kind="pause"] { color: #e1f1ab; }
 .text-cursor[data-kind="click"] { color: #0062ff; }
+.text-cursor.is-on-dark[data-kind="click"] { color: #bbd5ff; }
 
 /* Figma: 14px links centred at x 1211.5 / 1288 / 1367; the current page is 20px. The boxes touch
    (1173.5 → 1407.5), each centred on its link. All three sit on one baseline; the row is centred
