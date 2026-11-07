@@ -796,6 +796,33 @@ window.addEventListener("scroll", () => {
   requestAnimationFrame(() => { update(); ticking = false; });
 }, { passive: true });
 
+// Magnet between the two views (desktop): once scrolling stops partway, the page finishes the move.
+// Going down, a little past the top (25%) snaps to the expanded projects; going up, 25% above
+// the expanded view snaps back to the top.
+let lastScrollY = window.scrollY;
+let scrollDir = 0;
+let snapTimer = 0;
+let snapping = false;
+
+window.addEventListener("scroll", () => {
+  const y = window.scrollY;
+  if (y !== lastScrollY) scrollDir = Math.sign(y - lastScrollY);
+  lastScrollY = y;
+  if (isAbout || stackedMQ.matches) return;
+  clearTimeout(snapTimer);
+  snapTimer = setTimeout(() => {
+    const distance = Math.floor(layout.full - layout.compact);
+    const y = window.scrollY;
+    if (y <= 0 || y >= distance) { snapping = false; return; }
+    if (snapping) return;
+    const p = y / distance;
+    const toExpanded = scrollDir > 0 ? p > 0.25 : p > 0.75;
+    snapping = true;
+    window.scrollTo({ top: toExpanded ? distance : 0, behavior: "smooth" });
+    setTimeout(() => { snapping = false; }, 700);
+  }, 140);
+}, { passive: true });
+
 window.addEventListener("resize", measure);
 document.fonts?.ready.then(measure);
 measure();
