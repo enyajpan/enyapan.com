@@ -397,6 +397,7 @@ function open(card) {
   // a video the viewer started stops when its project closes, and a thumbnail's sound goes off
   document.querySelectorAll(".card:not(.is-open) .case__player-video").forEach((v) => v.pause());
   syncSound();
+  syncCardVideos();
   projectsEl.classList.toggle("is-even", !card); // nothing open: all five share the width
 }
 
@@ -410,6 +411,52 @@ cards.forEach((card) => {
 // Once scrolled down, one project is always open (the first, unless another
 // was hovered), and the last hovered project stays open.
 let collapsed = false;
+
+// Expanded project view (scrolled down; on Archive, any time one is open): only the open project's videos move; the narrow ones
+// pause and pick up again when they're opened. (The viewer's own films, Play / Pause, aren't touched.)
+const videosOnScreen = new WeakSet(); // the lazily loaded videos near the screen (see videoObserver)
+const lazyVideos = new WeakSet();
+
+function videoMayPlay(video) {
+  const card = video.closest(".card");
+  // Archive: also at the top of the page, whenever one project is open and the rest are narrow
+  if (card && !card.classList.contains("is-open") && (collapsed || (isArchive && cards.some((c) => c.classList.contains("is-open"))))) return false;
+  return !lazyVideos.has(video) || videosOnScreen.has(video);
+}
+
+// a video with autoplay can start by itself once it loads: stop it there if its project is narrow
+projectsEl.addEventListener("play", (e) => {
+  const video = e.target;
+  if (!video.classList.contains("case__player-video") && !videoMayPlay(video)) video.pause();
+}, true);
+
+function syncCardVideos() {
+  projectsEl.querySelectorAll("video:not(.case__player-video)").forEach((video) => {
+    if (!video.src && !video.currentSrc) return; // not loaded yet
+    if (videoMayPlay(video)) { if (video.paused) video.play().catch(() => {}); }
+    else if (!video.paused) video.pause();
+  });
+  // GIFs (Archive: Diary of a Synesthete) can't be paused, so a narrow one shows a still of the
+  // frame it was on, and gets its animation back when its project opens
+  projectsEl.querySelectorAll('img[src$=".gif"], img[data-gif]').forEach((img) => {
+    const frozen = "gif" in img.dataset;
+    if (videoMayPlay(img)) {
+      if (frozen) { img.src = img.dataset.gif; delete img.dataset.gif; }
+      return;
+    }
+    if (frozen || !img.complete || !img.naturalWidth) return;
+    try {
+      const still = document.createElement("canvas");
+      still.width = img.naturalWidth;
+      still.height = img.naturalHeight;
+      still.getContext("2d").drawImage(img, 0, 0);
+      img.dataset.gif = img.getAttribute("src");
+      img.src = still.toDataURL("image/png");
+    } catch {}
+  });
+}
+// a GIF still loading when its project went narrow is frozen once it arrives
+projectsEl.querySelectorAll('img[src$=".gif"]').forEach((img) => img.addEventListener("load", syncCardVideos));
 let progress = 0; // header collapse, 0 → 1
 
 // Archive (Figma frame "Archive"): one project is always open, the first to start with,
@@ -636,6 +683,7 @@ function update() {
   collapsed = p >= 1;
   // cards scroll on their own only on the scrolled-down page
   document.body.classList.toggle("is-collapsed", collapsed);
+  if (wasCollapsed !== collapsed) syncCardVideos();
   if (collapsed && !cards.some((c) => c.classList.contains("is-open"))) open(cards[0]);
   if (wasCollapsed && !collapsed) {
     cards.forEach((c) => { c.scrollTop = 0; });
@@ -978,7 +1026,7 @@ document.querySelectorAll("video[data-sound]").forEach((video) => {
     const allow = () => {
       delete video.dataset.blocked;
       syncSound();
-      video.play().catch(() => {});
+      if (videoMayPlay(video)) video.play().catch(() => {});
       ["pointerdown", "keydown"].forEach((type) => window.removeEventListener(type, allow, true));
     };
     ["pointerdown", "keydown"].forEach((type) => window.addEventListener(type, allow, true));
@@ -994,16 +1042,18 @@ const caseVideos = document.querySelectorAll("video.case__asset:not(.case__playe
 const videoObserver = new IntersectionObserver((entries) => {
   entries.forEach(({ target: video, isIntersecting }) => {
     if (isIntersecting) {
+      videosOnScreen.add(video);
       if (video.dataset.enc) { loadLockedVideo(video); return; }
       if (!video.src) video.src = video.dataset.src;
-      video.play().catch(() => {});
+      if (videoMayPlay(video)) video.play().catch(() => {});
     } else {
+      videosOnScreen.delete(video);
       video.pause();
     }
   });
 }, { rootMargin: "300px 0px" });
 
-caseVideos.forEach((v) => videoObserver.observe(v));
+caseVideos.forEach((v) => { lazyVideos.add(v); videoObserver.observe(v); });
 
 // ---------- project 1: password protected ----------
 // dx-locked.js holds the write-up encrypted with AES-256-CBC (key from the password with
@@ -1041,7 +1091,7 @@ async function dxUnlockWith(key) {
   const lock = projectsEl.querySelector(".dx-lock");
   const dx = lock.parentElement;
   dx.innerHTML = text.slice(4);
-  dx.querySelectorAll("video.dx-phone").forEach((v) => videoObserver.observe(v));
+  dx.querySelectorAll("video.dx-phone").forEach((v) => { lazyVideos.add(v); videoObserver.observe(v); });
   try {
     const raw = await crypto.subtle.exportKey("raw", key);
     sessionStorage.setItem(DX_KEY_STORE, `${DX_LOCKED.salt}:${btoa(String.fromCharCode(...new Uint8Array(raw)))}`);
@@ -1050,12 +1100,12 @@ async function dxUnlockWith(key) {
 }
 
 async function loadLockedVideo(video) {
-  if (video.dataset.loading) { if (video.src) video.play().catch(() => {}); return; }
+  if (video.dataset.loading) { if (video.src && videoMayPlay(video)) video.play().catch(() => {}); return; }
   video.dataset.loading = "1";
   const res = await fetch(video.dataset.enc);
   const plain = await dxDecrypt(dxKey, new Uint8Array(await res.arrayBuffer()));
   video.src = URL.createObjectURL(new Blob([plain], { type: "video/mp4" }));
-  video.play().catch(() => {});
+  if (videoMayPlay(video)) video.play().catch(() => {});
 }
 
 async function submitDxPassword() {
