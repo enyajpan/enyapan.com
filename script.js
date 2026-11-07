@@ -46,6 +46,8 @@ const PROJECTS = [
       },
       // Shown one after another, in order. w / h keep the layout steady while files load.
       assets: [
+        // the trailer: Mute above it, "Play" / "Pause" cursor over it, plays with sound on click
+        { src: "assets/in-case-of-loss/DP_trailer.mp4", w: 1512, h: 1080, player: true, caption: "Trailer" },
         { src: "assets/in-case-of-loss/web/01.jpg", w: 2300, h: 1643 },
         { src: "assets/in-case-of-loss/02.mp4", w: 2560, h: 1440 },
         { src: "assets/in-case-of-loss/03.mp4", w: 2560, h: 1440 },
@@ -178,7 +180,7 @@ const CHEVRON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" ari
 
 function caseStudyHTML(p) {
   const cs = p.caseStudy;
-  const asset = ({ src, w, h, player }) => {
+  const asset = ({ src, w, h, player, caption }) => {
     const url = encodeURI(src);
     if (!src.endsWith(".mp4")) {
       return `<img class="case__asset" src="${url}" width="${w}" height="${h}" alt="" loading="lazy" decoding="async">`;
@@ -191,6 +193,7 @@ function caseStudyHTML(p) {
             <button class="case__cue" type="button" data-player="mute">Mute</button>
           </div>
           <video class="case__asset case__player-video" src="${url}#t=0.1" width="${w}" height="${h}" playsinline disablepictureinpicture disableremoteplayback preload="metadata" tabindex="-1"></video>
+          ${caption ? `<p class="case__label case__caption">${caption}</p>` : ""}
         </div>`;
     }
     return `<video class="case__asset" data-src="${url}" width="${w}" height="${h}" autoplay muted loop playsinline disablepictureinpicture disableremoteplayback preload="none" tabindex="-1" aria-hidden="true"></video>`;
