@@ -363,6 +363,9 @@ function mediaHTML(media) {
 
 // archive.html shows the Archive projects (archive.js) with the same cards
 const isArchive = document.body.classList.contains("page-archive");
+// phones and portrait windows: projects stacked in a list, each opening on its own (style.css)
+const stackedMQ = matchMedia("(max-width: 760px), (orientation: portrait)");
+let detailCard = null; // the project open on its own in the stacked layout
 
 projectsEl.innerHTML = (isArchive ? ARCHIVE : isAbout ? [] : PROJECTS).map((p, i) => p.caseStudy ? `
   <a class="card card--case${p.link ? " card--link" : ""}" href="${p.link || `#project-${i + 1}`}"${p.media?.openHeight ? ` style="--open-media: ${p.media.openHeight}"` : ""}${p.link ? ` target="_blank" rel="noopener"` : ""}>
@@ -419,6 +422,11 @@ const lazyVideos = new WeakSet();
 
 function videoMayPlay(video) {
   const card = video.closest(".card");
+  if (stackedMQ.matches) {
+    // stacked: everything in the list moves; with one project open on its own, only that one
+    if (card && detailCard && card !== detailCard) return false;
+    return !lazyVideos.has(video) || videosOnScreen.has(video);
+  }
   // Archive: also at the top of the page, whenever one project is open and the rest are narrow
   if (card && !card.classList.contains("is-open") && (collapsed || (isArchive && cards.some((c) => c.classList.contains("is-open"))))) return false;
   return !lazyVideos.has(video) || videosOnScreen.has(video);
@@ -467,6 +475,93 @@ function resetToEven() {
 
 projectsEl.addEventListener("mouseleave", resetToEven);
 open(isArchive ? cards[0] : null);
+// ---------- phones: the nav folds into a menu icon (style.css) ----------
+const siteNav = document.querySelector(".site-header .nav");
+if (siteNav) {
+  const header = siteNav.closest(".site-header");
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "nav-toggle";
+  toggle.setAttribute("aria-label", "Menu");
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.innerHTML = `
+    <svg class="nav-toggle__open" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    <svg class="nav-toggle__close" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+  siteNav.after(toggle); // the header runs bottom-up on phones, so this sits at the top
+  const setMenu = (isOpen) => {
+    header.classList.toggle("is-menu-open", isOpen);
+    toggle.setAttribute("aria-expanded", String(isOpen));
+  };
+  toggle.addEventListener("click", () => setMenu(!header.classList.contains("is-menu-open")));
+  document.addEventListener("click", (e) => { if (!header.contains(e.target)) setMenu(false); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") setMenu(false); });
+  siteNav.addEventListener("click", () => setMenu(false));
+}
+
+// ---------- stacked layout: a project on its own ----------
+// In the list (phones and portrait windows) a project shows only its cover, eyebrow, title, timeline
+// and scope. Clicking it opens it on its own with everything (#project-N, so the browser's Back
+// works too); "Back" returns to the list where it was. Formel still links out.
+
+const backButton = document.createElement("button");
+backButton.type = "button";
+backButton.className = "detail-back";
+backButton.textContent = "\u2190 Back";
+document.querySelector(".site-header .nav")?.before(backButton); // under the nav (the header runs bottom-up on phones)
+let listScrollY = 0;
+let pushedDetail = false;
+
+function showDetail(card) {
+  if (card === detailCard) return;
+  if (!detailCard) listScrollY = window.scrollY;
+  detailCard?.classList.remove("is-detail");
+  detailCard = card;
+  card?.classList.add("is-detail");
+  document.body.classList.toggle("is-detail", Boolean(card));
+  if (card) open(card);
+  update();
+  syncCardVideos();
+  window.scrollTo(0, card ? 0 : listScrollY);
+}
+
+function cardFromHash() {
+  const m = location.hash.match(/^#project-(\d+)$/);
+  const card = m && cards[m[1] - 1];
+  return card && !card.classList.contains("card--link") ? card : null;
+}
+
+window.addEventListener("hashchange", () => {
+  if (!stackedMQ.matches) return;
+  showDetail(cardFromHash());
+  if (!detailCard) pushedDetail = false;
+});
+
+projectsEl.addEventListener("click", (e) => {
+  if (!stackedMQ.matches) return;
+  const card = e.target.closest(".card");
+  if (!card || card.classList.contains("card--link")) return; // Formel opens its own site
+  e.preventDefault();
+  if (detailCard) return; // already open
+  pushedDetail = true;
+  location.hash = card.getAttribute("href"); // → hashchange → showDetail
+});
+
+backButton.addEventListener("click", () => {
+  if (pushedDetail) history.back(); // back to the list's history entry
+  else {
+    history.replaceState(null, "", location.pathname + location.search);
+    showDetail(null);
+  }
+});
+
+// turning a portrait window landscape (or widening it) goes back to the side-by-side projects
+stackedMQ.addEventListener("change", () => {
+  if (!stackedMQ.matches && detailCard) showDetail(null);
+  else if (stackedMQ.matches && cardFromHash()) showDetail(cardFromHash());
+  measure();
+  syncCardVideos();
+});
+
 // the first Archive project starts open, without animating from equal widths
 setTimeout(() => document.body.classList.remove("is-loading"), 100);
 
@@ -598,7 +693,7 @@ if (arrivingFrom && HEADLINES[arrivingFrom.state] && arrivingFrom.state !== page
   // Work: its own width and line breaks from the start, so the typing wraps after "and" and "enthusiast"
   // like the finished headline. Archive / About: never wider than their own headline.
   const isWork = !isArchive && !isAbout;
-  if (window.innerWidth > 760 && !isWork) {
+  if (!stackedMQ.matches && !isWork) {
     const font = parseFloat(getComputedStyle(statement).fontSize);
     const own = statement.getBoundingClientRect().width;
     statement.style.width = `${Math.min((arrivingFrom.width * font) / arrivingFrom.font, own)}px`;
@@ -680,7 +775,8 @@ function update() {
 
   // Scrolling back up to the home page also restores the default
   const wasCollapsed = collapsed;
-  collapsed = p >= 1;
+  // stacked: no collapsing header; "collapsed" (the full project showing) means a project is open on its own
+  collapsed = stackedMQ.matches ? Boolean(detailCard) : p >= 1;
   // cards scroll on their own only on the scrolled-down page
   document.body.classList.toggle("is-collapsed", collapsed);
   if (wasCollapsed !== collapsed) syncCardVideos();
@@ -690,7 +786,7 @@ function update() {
     resetToEven();
   }
   // Archive: "Enya Pan is a research … who loves to play." backspaces to "Enya loves to play."
-  if (isArchive && collapsed !== wasCollapsed) headline.animate(pageHeadline(), { onStep: () => update() });
+  if (isArchive && collapsed !== wasCollapsed && !stackedMQ.matches) headline.animate(pageHeadline(), { onStep: () => update() });
 }
 
 let ticking = false;
@@ -703,6 +799,7 @@ window.addEventListener("scroll", () => {
 window.addEventListener("resize", measure);
 document.fonts?.ready.then(measure);
 measure();
+if (stackedMQ.matches && cardFromHash()) showDetail(cardFromHash()); // arriving at #project-N
 
 // Clicking the name scrolls back to the top
 // Samsung's Light Mode / Dark Mode tag. Runs before the card's own link and hover handling.
@@ -837,6 +934,7 @@ function cursorTextFor(el) {
   const box = film?.getBoundingClientRect();
   if (box && cursor.y >= box.top && cursor.y <= box.bottom && cursor.x >= box.left && cursor.x <= box.right) return film.paused ? "Play" : "Pause";
   if (el?.closest?.(".projects .card--link")) return "Click\nto view"; // Formel links out: the whole card (Figma "click-hover")
+  if (stackedMQ.matches) return !detailCard && el?.closest?.(".projects .card") ? "Click\nto view" : ""; // stacked: a click opens the project
   // top of the page: the whole project, title and all; once scrolled: only its cover
   if (el?.closest?.(collapsed ? ".projects .card__media" : ".projects .card")) return "Scroll\nto view";
   return "";

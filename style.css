@@ -1061,9 +1061,9 @@ img.is-preview { background: center / cover no-repeat; } /* the tiny copy (set i
 /* dx-app as a narrow card (scrolled, not hovered): Context, The Problem, the six app screens
    stacked, then Takeaways, all in one column */
 @container (max-width: 699px) {
-  body.is-collapsed .case--body .dx > :not(.dx-context, .dx-problem, .dx-solution, .dx-lessons),
-  body.is-collapsed .case--body .dx-arrows,
-  body.is-collapsed .case--body .dx-solution > :not(.dx-strip) { display: none; }
+  body.is-collapsed:not(.is-detail) .case--body .dx > :not(.dx-context, .dx-problem, .dx-solution, .dx-lessons),
+  body.is-collapsed:not(.is-detail) .case--body .dx-arrows,
+  body.is-collapsed:not(.is-detail) .case--body .dx-solution > :not(.dx-strip) { display: none; }
   body.is-collapsed .case--body .dx-problem { max-width: none; }
   body.is-collapsed .case--body :is(.dx-pair, .dx-trio, .dx-takeaways) {
     grid-template-columns: minmax(0, 1fr);
@@ -1110,7 +1110,7 @@ video::-webkit-media-controls-overlay-play-button { display: none !important; }
    The eight projects are one open card plus seven 42.5px strips, 5px apart, from x 17 to 21px from
    the right, down to the bottom of the window. The cards always use the scrolled-down sizes (--p: 1). */
 
-@media (min-width: 761px) {
+@media (min-width: 761px) and (orientation: landscape) {
   .page-archive .statement {
     width: calc(419 * var(--u));
     font-size: calc(29.49 * var(--u));
@@ -1261,7 +1261,7 @@ html:has(body.page-about),
 
 @view-transition { navigation: auto; }
 
-@media (min-width: 761px) and (prefers-reduced-motion: no-preference) {
+@media (min-width: 761px) and (orientation: landscape) and (prefers-reduced-motion: no-preference) {
   .statement { view-transition-name: statement; }
 
   /* each menu word grows / shrinks into place (the one for the new page grows to 20px) */
@@ -1294,14 +1294,18 @@ html:has(body.page-about),
   }
 }
 
+.detail-back { display: none; }
+
 /* ---------- gutter guides (press "g") ---------- */
 
 body.show-guides .card { outline: 1px solid var(--guide); outline-offset: 0; }
 body.show-guides .projects { outline: 1px dashed var(--guide); }
 
-/* ---------- small screens: stacked, no accordion ---------- */
+/* ---------- phones and portrait windows: stacked, no accordion ----------
+   The list shows each project's cover, eyebrow, title, timeline and scope only. Tapping one opens
+   it on its own (body.is-detail, script.js) with everything else, and Back returns to the list. */
 
-@media (max-width: 760px) {
+@media (max-width: 760px), (orientation: portrait) {
   :root { --u: 1px; --p: 0 !important; }
 
   .scroller { height: auto; }
@@ -1334,8 +1338,63 @@ body.show-guides .projects { outline: 1px dashed var(--guide); }
   .card { flex: none; overflow: visible; --a: 1; } /* every card shows at full size on phones */
   .card__media { height: auto; aspect-ratio: 4 / 3; }
   .card__info { height: auto; opacity: 1; }
-  .card__more,
-  .case__assets { display: none; } /* long project content lives on project pages on phones */
+  .card__more { display: none; }
+
+  /* the list: nothing past the timeline and scope */
+  body:not(.is-detail) .card :is(.case__tagline, .case__notes, .case__text, .case__assets, .dx, .sx) { display: none !important; }
+  body:not(.is-detail) .card .case__overview { display: flex; flex-direction: column; gap: 0; align-items: stretch; }
+  body:not(.is-detail) .card .case__meta:nth-child(n + 4) { display: none; } /* Samsung's Role and Team: only in the project */
+  body:not(.is-detail) .card .case__heading + .case__meta { margin-top: 10px; }
+  body:not(.is-detail) .card .case__meta + .case__meta { margin-top: 8px; }
+
+  /* one project on its own, everything showing, text large enough to read */
+  body.is-detail .statement { display: none; }
+  body.is-detail .site-header { gap: 0; }
+  body.is-detail .card:not(.is-detail) { display: none; }
+  body.is-detail .card.is-detail {
+    --text-min: 12px;
+    --lh-min: 17px;
+    cursor: default;
+  }
+  body.is-detail .card.is-detail .case__assets { display: block; }
+  body.is-detail .card.is-detail .case__overview,
+  body.is-detail .card.is-detail .case__text { display: flex; flex-direction: column; gap: 16px; align-items: stretch; }
+  body.is-detail .card.is-detail .case__notes-cols { flex-direction: column; gap: 12px; }
+  body.is-detail .card.is-detail .case__note { width: auto; margin-left: 0; }
+  body.is-detail .card.is-detail .case__notes { margin-bottom: 8px; }
+  body.is-detail .card.is-detail .case__tagline { display: none; }
+  body.is-detail .card.is-detail .case__collage { padding-top: 0; }
+
+  .detail-back {
+    display: none;
+    align-self: flex-start;
+    padding: 5px 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  body.is-detail .detail-back { display: block; }
+
+  /* Archive covers: the plain picture filling the box (the desktop crop is for the wide card) */
+  .projects .card .card__media img.media--crop {
+    position: static;
+    width: 100%;
+    height: 100%;
+    transform: none;
+    object-fit: cover;
+  }
+
+  /* Samsung: the city animation goes under the Background text, which takes the full width */
+  body.is-detail .sx-intro { flex-direction: column; align-items: stretch; gap: 16px; }
+  body.is-detail .sx-text { flex: none; }
+  body.is-detail .sx-video { width: 100%; margin-bottom: 0; }
+
+  /* the trailer fills the width on a phone */
+  .case__player--fit .case__player-video { width: 100%; height: auto; }
+  .case__player--fit .case__player-bar { padding-right: 1.739cqi; }
 
   html:has(body.page-about),
   .page-about { height: auto; overflow: visible; }
@@ -1348,6 +1407,80 @@ body.show-guides .projects { outline: 1px dashed var(--guide); }
   .about__col--education { width: auto; margin: 0; }
   .about__photo { width: 100%; max-width: 400px; height: auto; margin: 0; }
   .about__col dd { line-height: 1.4; }
+}
+
+/* ---------- About in a portrait desktop window ----------
+   The list at the size of the job names (DoorDash, J.P. Morgan: 14px), then Experience and
+   Education side by side below; the photo sits to the right of the list. */
+@media (min-width: 761px) and (orientation: portrait) {
+  .page-about .about {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 24px;
+    row-gap: 40px;
+    padding-top: 20px;
+  }
+  .page-about .about__list { grid-column: 1; grid-row: 1; }
+  /* the photo beside the list, lined up with the Education column and about as tall as the list */
+  .page-about .about__photo {
+    grid-column: 2;
+    grid-row: 1;
+    width: 160px;
+    height: auto;
+    aspect-ratio: 261 / 400;
+    margin: 0;
+  }
+}
+
+/* Phones and portrait windows: the list at the size of the job names (DoorDash, J.P. Morgan: 14px) */
+@media (max-width: 760px), (orientation: portrait) {
+  .page-about .about__list { gap: 4px; font-size: 14px; line-height: 1.2; }
+  .page-about .about__sub { padding-left: 32px; }
+  .page-about .about__sub--2 { padding-left: 55px; max-width: none; }
+  .page-about .about__sub::before { left: 11px; width: 14px; height: 8px; border-width: 0 0 1.5px 1.5px; }
+  .page-about .about__sub--2::before { left: 34px; }
+}
+
+/* ---------- phones: Work / Archive / About fold into a menu icon (not portrait desktop windows) ---------- */
+.nav-toggle { display: none; }
+
+@media (max-width: 760px) {
+  .site-header { position: relative; }
+
+  .nav-toggle {
+    display: flex;
+    align-self: flex-end;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin: -4px -4px 0 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .nav-toggle svg { width: 24px; height: 24px; }
+  .nav-toggle .nav-toggle__close,
+  .site-header.is-menu-open .nav-toggle .nav-toggle__open { display: none; }
+  .site-header.is-menu-open .nav-toggle .nav-toggle__close { display: block; }
+
+  /* the links drop down under the icon, right-aligned */
+  .site-header .nav {
+    position: absolute;
+    z-index: 20;
+    top: 48px;
+    right: 16px;
+    display: none;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    padding: 8px 0;
+    background: var(--paper);
+  }
+  .site-header.is-menu-open .nav { display: flex; }
+  .site-header .nav a { padding: 4px 0; justify-content: flex-end; }
 }
 
 /* Colophon and © (About), very small, in the bottom-right corner */
