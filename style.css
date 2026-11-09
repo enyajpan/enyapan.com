@@ -1400,7 +1400,7 @@ body.show-guides .projects { outline: 1px dashed var(--guide); }
   .page-about { height: auto; overflow: visible; }
   .page-about .scroller,
   .page-about .stage { height: auto; }
-  .page-about .statement { font-size: 34px; }
+  .page-about .statement { width: auto; font-size: 34px; }
   .about { flex-direction: column; gap: 40px; padding: 8px 16px 48px; }
   .about__list,
   .about__col--experience,

@@ -112,7 +112,7 @@ const PROJECTS = [
     media: { type: "video", src: "assets/samsung/samsung_thumbnail.mp4", cls: "media--samsung" },
     caseStudy: {
       meta: [
-        { label: "Timeline", value: "April 2024" },
+        { label: "Timeline", value: "June - August 2022" },
         { label: "Scope", value: "Brand Identity" },
         { label: "Role", value: "Visual Designer" },
         { label: "Team", value: "Edge &amp; Endpoint Segment Marketing" },
@@ -140,6 +140,7 @@ const PROJECTS = [
 const root = document.documentElement;
 const header = document.querySelector(".site-header");
 const statement = document.querySelector(".statement");
+const statementHTML = statement.innerHTML; // as written, before the typing changes it (see restingHeight)
 // the About page has no project list: a detached stand-in keeps the project code below harmless
 const projectsEl = document.querySelector(".projects") || document.createElement("div");
 const isAbout = document.body.classList.contains("page-about");
@@ -666,6 +667,7 @@ function aboutLoop(i = 0) {
     onStep: () => measure(),
     onDone: () => {
       aboutState = state;
+      measure(); // the typing cursor is gone now, which can take the text back to one line
       setTimeout(() => aboutLoop(i + 1), state === "about" ? 300 : 1600); // each one stays up a moment
     },
   });
@@ -719,22 +721,70 @@ if (arrivingFrom && HEADLINES[arrivingFrom.state] && arrivingFrom.state !== page
 
 let layout = { full: 523, compact: 68, topStart: 283, topEnd: 17 };
 
+// ---------- the headline sits on the line ----------
+// The headline is anchored at its bottom, on the header line, so the line stays put while the text
+// is typed or backspaced from three lines to one: the text grows and shrinks upwards instead.
+// The line's place comes from how tall this page's headline is at rest (About: the tallest of its loop).
+
+const restingStates = () => (isAbout ? ["about", ...ABOUT_LOOP] : isArchive ? ["archive"] : ["work"]);
+let restCache = { key: "", h: 0 };
+
+function restingHeight() {
+  const stacked = stackedMQ.matches;
+  const style = getComputedStyle(header);
+  const width = stacked ? header.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) : 0;
+  const key = `${window.innerWidth}|${window.innerHeight}|${getComputedStyle(statement).fontSize}|${width}`;
+  if (restCache.key === key) return restCache.h;
+
+  // a hidden copy of the headline, showing one resting state at a time
+  const probe = statement.cloneNode(false);
+  probe.removeAttribute("href");
+  probe.setAttribute("aria-hidden", "true");
+  probe.classList.add("is-ready");
+  probe.classList.remove("is-retyping");
+  Object.assign(probe.style, { position: "absolute", visibility: "hidden", pointerEvents: "none", paddingTop: "0", left: "0", top: "0" });
+  probe.style.width = stacked ? `${width}px` : ""; // not the narrower width a page change may have set
+  header.appendChild(probe);
+  let h = 0;
+  for (const state of restingStates()) {
+    probe.innerHTML = statementHTML;
+    probe.querySelectorAll("video").forEach((v) => v.remove());
+    probe.querySelectorAll("[data-seg]").forEach((el) => { if (!HEADLINES[state].includes(el.dataset.seg)) el.remove(); });
+    h = Math.max(h, probe.getBoundingClientRect().height);
+  }
+  probe.remove();
+  restCache = { key, h };
+  return h;
+}
+
+// Phones and portrait windows: the header is in the page's flow, so room above the text keeps the
+// line where the resting headline puts it
+function holdHeadlineBottom() {
+  if (!stackedMQ.matches) { statement.style.paddingTop = ""; return; }
+  const pad = parseFloat(statement.style.paddingTop) || 0;
+  const h = statement.getBoundingClientRect().height - pad;
+  statement.style.paddingTop = `${Math.max(0, restingHeight() - h)}px`;
+}
+
 function measure() {
   const u = window.innerWidth / 1440;
+  holdHeadlineBottom();
 
   // About (Figma frame "About"): the same small header as Archive, no collapse. The line sits
   // 13.69px under the headline (a quarter of Figma's 54.75), and moves down while it's retyped.
   if (isAbout) {
-    const h = 148 * u + statement.getBoundingClientRect().height + 13.69 * u;
-    root.style.setProperty("--header-h", `${h}px`);
-    root.style.setProperty("--statement-top", `${148 * u}px`);
+    // the line sits under the resting headline (one line); longer text grows upwards from it
+    const h = statement.getBoundingClientRect().height;
+    const top = Math.max(50 * u, 148 * u + restingHeight() - h);
+    root.style.setProperty("--header-h", `${top + h + 13.69 * u}px`);
+    root.style.setProperty("--statement-top", `${top}px`);
     return;
   }
 
   // Archive (Figma frame "Archive"): a smaller header (headline from y 148, line 11.25px under it,
   // half of Figma's 22.5, so at 223.75) that collapses to the same 68px bar as Work.
   if (isArchive) {
-    layout = { full: 223.75 * u, compact: 68 * u, topStart: 148 * u, topEnd: 17 * u };
+    layout = { full: Math.max(223.75 * u, 148 * u + restingHeight() + 11.25 * u), compact: 68 * u, topStart: 148 * u, topEnd: 17 * u };
     root.style.setProperty("--collapse-distance", `${layout.full - layout.compact}px`);
     update();
     return;
@@ -766,7 +816,13 @@ function update() {
 
   root.style.setProperty("--p", p.toFixed(4));
   progress = p;
-  const statementTop = lerp(layout.topStart, layout.topEnd);
+  let statementTop = lerp(layout.topStart, layout.topEnd);
+  // Archive: at the top of the page the headline stands on the line (it grows upwards while retyped)
+  if (isArchive) {
+    const u = window.innerWidth / 1440;
+    const restTop = Math.max(50 * u, layout.full - 11.25 * u - statement.getBoundingClientRect().height);
+    statementTop = lerp(restTop, layout.topEnd);
+  }
   let headerH = lerp(layout.full, layout.compact);
   // Archive: never shorter than the headline, so its second line isn't cut off while it backspaces
   if (isArchive) headerH = Math.max(headerH, statementTop + statement.getBoundingClientRect().height + 11.25 * (window.innerWidth / 1440));
