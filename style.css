@@ -1460,6 +1460,7 @@ html:has(body.page-about),
   margin: 0;
   transform: translate(-50%, -50%);
   line-height: calc(28 * var(--u));
+  text-align: center;
   overflow-wrap: anywhere;
   white-space: pre-line;
 }
