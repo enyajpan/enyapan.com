@@ -12,7 +12,7 @@ service cloud.firestore {
         && request.resource.data.body.size() <= 280
         && (request.resource.data.name == null
             || (request.resource.data.name is string && request.resource.data.name.size() <= 40))
-        && request.resource.data.color in ['green', 'blue', 'purple', 'gray']
+        && request.resource.data.color in ['lime', 'green', 'purple', 'violet', 'cobalt', 'gray', 'blue']
         && (!('location' in request.resource.data) || request.resource.data.location == null
             || (request.resource.data.location is string && request.resource.data.location.size() <= 60))
         && request.resource.data.created_at == request.time;   // the server's clock, not the visitor's

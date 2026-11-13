@@ -21,7 +21,8 @@ const PLACE_LOOKUP = "https://ipapi.co/json/";
   const list = document.querySelector(".wall__list");
   if (!form || !list) return;
 
-  const COLORS = ["green", "blue", "purple", "gray"];
+  // Figma order: dark green, light green, pink, purple, blue, gray ("blue" is the old light blue, kept for older messages)
+  const COLORS = ["lime", "green", "purple", "violet", "cobalt", "gray", "blue"];
   const COOLDOWN_MS = 30_000; // one message per 30 seconds per browser
   const store = {
     get(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } },
