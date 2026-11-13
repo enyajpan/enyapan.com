@@ -620,8 +620,17 @@ const headline = (() => {
     text.forEach((t, node) => { node.textContent = t; });
   };
 
+  // more than this many words to delete: select them (like a search bar's highlight), then delete at once
+  const SELECT_OVER = 5;
+  const wordCount = (seg) => {
+    const text = seg.units.slice(0, seg.shown).map((u) => u.ch ?? " ").join("");
+    return text.split(/\s+/).filter((w) => /\w/.test(w)).length;
+  };
+  const clearSelection = () => segs.forEach((seg) => seg.el.classList.remove("is-selected"));
+
   const stop = () => {
     clearTimeout(timer);
+    clearSelection();
     caret.remove();
     const done = finish;
     finish = null;
@@ -654,6 +663,35 @@ const headline = (() => {
         onStep();
         timer = setTimeout(step, (going ? 32 + Math.random() * 24 : 45 + Math.random() * 35) / speed);
       };
+
+      // Lots to delete: the cursor shows where the deleting starts, then the words are selected from the
+      // end backwards, a piece at a time (the cursor goes while there's a selection, as in a text field),
+      // held a moment, deleted all at once, and the new words typed as usual
+      const going = segs.filter((seg) => !keep.includes(seg.name) && seg.shown > 0);
+      if (going.reduce((n, seg) => n + wordCount(seg), 0) > SELECT_OVER) {
+        let i = going.length;
+        const select = () => {
+          caret.remove(); // the cursor goes once there's a selection
+          if (i > 0) {
+            going[--i].el.classList.add("is-selected");
+            timer = setTimeout(select, 55 / speed);
+            return;
+          }
+          timer = setTimeout(() => {
+            clearSelection();
+            going.forEach((seg) => { seg.shown = 0; render(seg); });
+            segs.filter((seg) => seg.shown > 0).pop()?.el.appendChild(caret); // the caret where the text was
+            onStep();
+            timer = setTimeout(step, 300 / speed);
+          }, 450 / speed);
+        };
+        // first the cursor shows where the deleting starts (after the last word that goes) for a moment
+        timer = setTimeout(() => {
+          going[going.length - 1].el.appendChild(caret);
+          timer = setTimeout(select, 550 / speed);
+        }, delay);
+        return;
+      }
       timer = setTimeout(step, delay);
     },
   };

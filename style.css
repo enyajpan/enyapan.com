@@ -1198,11 +1198,25 @@ video::-webkit-media-controls-overlay-play-button { display: none !important; }
   height: 0.95em;
   margin-left: 0.04em;
   vertical-align: -0.12em;
-  background: #0062ff;
+  background: #c107ff;
   animation: caret-blink 1s steps(1) infinite;
 }
 
 @keyframes caret-blink { 50% { opacity: 0; } }
+
+/* Words about to be deleted all at once: highlighted like selected text in a search bar */
+.statement [data-seg].is-selected {
+  background: #f0c2ff;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.statement [data-seg].is-selected .bunny::after {   /* the bunny is drawn over the text: tint it too */
+  content: "";
+  position: absolute;
+  inset: 12% 2% 8% 3%;
+  background: #f0c2ff;
+  mix-blend-mode: multiply;
+}
 
 /* ---------- About page (Figma frame "About") ----------
    Same small header as Archive ("Enya Pan is" from y 148, line 13.69 under it), no collapse.
