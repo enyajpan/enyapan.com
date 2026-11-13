@@ -1362,6 +1362,19 @@ html:has(body.page-about),
 .note-form__submit:disabled { opacity: 0.5; cursor: progress; }
 .note-form__status { margin: 0; font-size: 12px; line-height: 20px; }
 
+/* the contact line, bottom-left (Figma: x 20, 28 above the bottom, 264 wide, 14 / 20) */
+.messages__contact {
+  position: absolute;
+  left: calc(20 * var(--u));
+  bottom: calc(28 * var(--u));
+  width: calc(264 * var(--u));
+  margin: 0;
+  color: #3d3d3d;
+  font-size: max(12px, calc(14 * var(--u)));
+  line-height: calc(20 * var(--u));
+}
+.messages__contact a:hover { text-decoration: underline; }
+
 /* ---- the wall ---- */
 .wall {
   position: absolute;
@@ -1467,6 +1480,7 @@ html:has(body.page-about),
   .swatch span { width: 40px; height: 40px; border-radius: 5px; }
   .note-form__actions { margin-top: 12px; }
   .wall { position: static; }
+  .messages__contact { position: static; width: auto; max-width: 300px; font-size: 14px; line-height: 20px; }
   .wall__bar { display: none; }
   .wall .wall__list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; height: auto; overflow: visible; }
   .wall .message { min-height: 220px; font-size: 16px; line-height: 22px; }
