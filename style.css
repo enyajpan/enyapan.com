@@ -184,7 +184,7 @@ a { color: inherit; text-decoration: none; }
   left: 0;
   padding: 1px 5px;
   font-family: var(--font);
-  font-size: 9pt;
+  font-size: 7pt;            /* 2pt smaller than the original 9pt */
   line-height: 1.3;
   border: 1px solid;
   white-space: pre;        /* keeps line breaks in data-label */
@@ -193,9 +193,9 @@ a { color: inherit; text-decoration: none; }
 }
 
 .hover-label--gray  { color: #767885; background: #e9eaf0; border-color: #767885; } /* rabbit, hole */
-.hover-label--green  { color: #5e9900; background: #d8f184; border-color: #5e9900; line-height: 9pt; padding-block: 2px; } /* "Enya" (+1px top/bottom) */
-.hover-label--blue-stacked { color: #0062ff; background: #d8e7ff; border-color: #0062ff; line-height: 9pt; padding-block: 2px; } /* "designer" */
-.hover-label--purple { color: #c107ff; background: #faebff; border-color: #c107ff; line-height: 9pt; padding-block: 2px; } /* "Pan" (+1px top/bottom) */
+.hover-label--green  { color: #5e9900; background: #d8f184; border-color: #5e9900; line-height: 7pt; padding-block: 2px; } /* "Enya" (+1px top/bottom) */
+.hover-label--blue-stacked { color: #0062ff; background: #d8e7ff; border-color: #0062ff; line-height: 7pt; padding-block: 2px; } /* "designer" */
+.hover-label--purple { color: #c107ff; background: #faebff; border-color: #c107ff; line-height: 7pt; padding-block: 2px; } /* "Pan" (+1px top/bottom) */
 
 .hover-label.is-visible { visibility: visible; }
 
