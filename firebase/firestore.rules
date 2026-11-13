@@ -1,0 +1,26 @@
+rules_version = '2';
+
+// Messages page ("leave a note"). Visitors can read every note and add new ones, but never edit
+// or delete: remove a note from the Firebase console (Firestore Database → notes).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /notes/{noteId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['name', 'body', 'color', 'location', 'created_at'])
+        && request.resource.data.body is string
+        && request.resource.data.body.trim().size() > 0
+        && request.resource.data.body.size() <= 280
+        && (request.resource.data.name == null
+            || (request.resource.data.name is string && request.resource.data.name.size() <= 40))
+        && request.resource.data.color in ['green', 'blue', 'purple', 'gray']
+        && (!('location' in request.resource.data) || request.resource.data.location == null
+            || (request.resource.data.location is string && request.resource.data.location.size() <= 60))
+        && request.resource.data.created_at == request.time;   // the server's clock, not the visitor's
+      allow update, delete: if false;
+    }
+    // nothing else in the database is reachable from the site
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

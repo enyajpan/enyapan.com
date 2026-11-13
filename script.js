@@ -143,7 +143,8 @@ const statement = document.querySelector(".statement");
 const statementHTML = statement.innerHTML; // as written, before the typing changes it (see restingHeight)
 // the About page has no project list: a detached stand-in keeps the project code below harmless
 const projectsEl = document.querySelector(".projects") || document.createElement("div");
-const isAbout = document.body.classList.contains("page-about");
+const isAbout = document.body.classList.contains("page-about"); // About and Messages: one-screen pages with a fixed header
+const isMessages = document.body.classList.contains("page-messages");
 
 // ---------- render cards ----------
 
@@ -576,9 +577,9 @@ setTimeout(() => document.body.classList.remove("is-loading"), 100);
 //   scrolled  Enya loves to play.   (Archive)      Enya Pan   (Work, the rest fades out)
 //   About     Enya Pan is, then on a loop: … a designer. → a tinkerer. → a [visual, data] storyteller. → (back to "is")
 
-const SEGS = ["enya", "pan", "is", "a", "designer", "designer-dot", "tinkerer", "tinkerer-dot", "storyteller", "storyteller-dot",
+const SEGS = ["leave", "enya", "pan", "is", "a", "designer", "designer-dot", "tinkerer", "tinkerer-dot", "storyteller", "storyteller-dot",
   "and", "research", "enthusiast", "who", "loves"];
-const ABOUT_ONLY = ["designer-dot", "tinkerer", "tinkerer-dot", "storyteller", "storyteller-dot"];
+const ABOUT_ONLY = ["leave", "designer-dot", "tinkerer", "tinkerer-dot", "storyteller", "storyteller-dot"]; // ("leave" is Messages' only)
 const HEADLINES = {
   work: SEGS.filter((s) => !ABOUT_ONLY.includes(s)),
   "work-collapsed": ["enya", "pan"],
@@ -588,6 +589,7 @@ const HEADLINES = {
   "about-designer": ["enya", "pan", "is", "a", "designer", "designer-dot"],
   "about-tinkerer": ["enya", "pan", "is", "a", "tinkerer", "tinkerer-dot"],
   "about-storyteller": ["enya", "pan", "is", "a", "storyteller", "storyteller-dot"],
+  messages: ["leave"],
 };
 
 const headline = (() => {
@@ -659,7 +661,7 @@ const headline = (() => {
 
 // About: after "Enya Pan is", the headline cycles through what's in the list below it
 const ABOUT_LOOP = ["about-designer", "about-tinkerer", "about-storyteller", "about"];
-let aboutState = "about";
+let aboutState = isMessages ? "messages" : "about";
 function aboutLoop(i = 0) {
   const state = ABOUT_LOOP[i % ABOUT_LOOP.length];
   headline.animate(state, {
@@ -705,14 +707,14 @@ if (arrivingFrom && HEADLINES[arrivingFrom.state] && arrivingFrom.state !== page
     statement.style.width = "";
     statement.classList.remove("is-retyping");
     measure();
-    if (isAbout) aboutLoop();
+    if (isAbout && !isMessages) aboutLoop();
   };
   // About → Work types the most, so it goes 1.5× as fast
   const speed = arrivingFrom.state.startsWith("about") && pageHeadline() === "work" ? 1.5 : 1;
   setTimeout(() => headline.animate(pageHeadline(), { delay: 0, speed, onStep: () => measure(), onDone: settle }), 800);
 } else {
   headline.set(pageHeadline());
-  if (isAbout) setTimeout(aboutLoop, 800);
+  if (isAbout && !isMessages) setTimeout(aboutLoop, 800);
 }
 
 // ---------- header collapse on scroll ----------
@@ -726,7 +728,7 @@ let layout = { full: 523, compact: 68, topStart: 283, topEnd: 17 };
 // is typed or backspaced from three lines to one: the text grows and shrinks upwards instead.
 // The line's place comes from how tall this page's headline is at rest (About: the tallest of its loop).
 
-const restingStates = () => (isAbout ? ["about", ...ABOUT_LOOP] : isArchive ? ["archive"] : ["work"]);
+const restingStates = () => (isMessages ? ["messages"] : isAbout ? ["about", ...ABOUT_LOOP] : isArchive ? ["archive"] : ["work"]);
 let restCache = { key: "", h: 0 };
 
 function restingHeight() {
@@ -769,6 +771,13 @@ function holdHeadlineBottom() {
 function measure() {
   const u = window.innerWidth / 1440;
   holdHeadlineBottom();
+
+  // Messages (Figma frame "Messages"): Work's compact 68px bar, "Leave a message!" at 17 from the top
+  if (isMessages) {
+    root.style.setProperty("--header-h", `${68 * u}px`);
+    root.style.setProperty("--statement-top", `${17 * u}px`);
+    return;
+  }
 
   // About (Figma frame "About"): the same small header as Archive, no collapse. The line sits
   // 13.69px under the headline (a quarter of Figma's 54.75), and moves down while it's retyped.

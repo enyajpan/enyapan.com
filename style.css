@@ -82,6 +82,10 @@
 
 * { box-sizing: border-box; }
 
+/* room for a scrollbar on every page (when one shows), so the header doesn't shift between
+   pages that scroll (Work, Playground) and ones that don't (About, Messages) */
+html { scrollbar-gutter: stable; }
+
 html, body {
   margin: 0;
   background: var(--paper);
@@ -231,7 +235,7 @@ body.has-text-cursor .text-cursor { visibility: visible; }
 .nav {
   position: absolute;
   top: calc(33.5 * var(--u));
-  right: calc(32.5 * var(--u));
+  right: calc(25 * var(--u));     /* the mail icon's right edge, x 1415 (Figma) */
   transform: translateY(-50%);
   display: flex;
   align-items: baseline;
@@ -240,10 +244,33 @@ body.has-text-cursor .text-cursor { visibility: visible; }
 
 .nav a { text-align: center; line-height: normal; }
 .nav__work    { width: calc(76 * var(--u)); }
-.nav__archive { width: calc(77 * var(--u)); }
-.nav__about   { width: calc(81 * var(--u)); }
+.nav__archive  { width: calc(102 * var(--u)); } /* "Playground" */
+.nav__about    { width: calc(81 * var(--u)); }
+/* the "mail" icon (Figma, 14 × 14) at the end of the row, x 1401–1415, set apart from the words:
+   about 44 between "About" and the icon (Figma has 21) */
+.nav__messages { margin-left: calc(22.5 * var(--u)); color: inherit; }
+.nav__icon {
+  display: block;
+  width: max(12px, calc(14 * var(--u)));
+  height: max(12px, calc(14 * var(--u)));
+  transform: translateY(calc(2 * var(--u)));   /* sits on the baseline like the words, centred on them */
+  transition: opacity 0.15s;
+}
+.nav__messages:hover .nav__icon { opacity: 0.6; }
 
-.nav a[aria-current="page"] { font-size: max(16px, calc(20 * var(--u))); }
+/* The current page keeps its size and place, underlined in purple (#c107ff) */
+.nav a span { display: inline-block; position: relative; }
+.nav a[aria-current="page"] span::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1.5px;
+  background: #c107ff;
+}
+/* the envelope's box ends 4px above the words' (it sits on their baseline): its line drops to theirs */
+.nav a.nav__messages[aria-current="page"] span::after { bottom: calc(-3px - 4 * var(--u)); }
 
 /* ---------- projects (accordion) ---------- */
 
@@ -1255,6 +1282,205 @@ html:has(body.page-about),
 }
 .about__nested dd:has(br) { line-height: calc(18 * var(--u)); }
 
+
+/* ---------- Messages page (Figma frame "Messages") ----------
+   Work's compact header: "Leave a message!" (32px) at 17 from the top, the line at 68.
+   Left (x 20, 382 wide): 14px labels on 32px lines (#3d3d3d), each field right under its label
+   (#f6f6f9, 6px corners, 39 / 161 tall), 15 between groups, four 40px colour squares ~6.5 apart,
+   and Submit (styled like Mute) 33 below them. Right (x 450 → 1421, y 68 → 523): the messages
+   as an accordion like the projects, 29px strips 4 apart and one open 740-wide card (18px: name
+   top-left, date / time top-right, the message centred (28px lines), city / state bottom-right),
+   "View as grid" under it. */
+.statement:not(.is-ready) [data-seg="leave"] { display: none; }
+.page-messages .statement { width: auto; font-size: calc(32 * var(--u)); line-height: calc(43 * var(--u)); white-space: nowrap; }
+
+.messages {
+  position: absolute;
+  inset: var(--header-h, 68px) 0 0 0;
+  --ink-2: #3d3d3d;
+}
+
+.note-form {
+  position: absolute;
+  top: calc(29 * var(--u));
+  left: calc(20 * var(--u));
+  width: calc(382 * var(--u));
+  display: grid;
+  gap: calc(15 * var(--u));
+  color: var(--ink-2);
+}
+.note-form__field { position: relative; display: grid; gap: 0; }
+.note-form__label { display: block; padding: 0; font-size: max(12px, calc(14 * var(--u))); line-height: calc(32 * var(--u)); }
+.note-form input[type="text"],
+.note-form textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: calc(6 * var(--u));
+  background: #f6f6f9;
+  color: #000;
+  font: inherit;
+  font-size: max(13px, calc(14 * var(--u)));
+  line-height: 1.35;
+}
+.note-form input[type="text"] { height: calc(39 * var(--u)); padding: 0 calc(12 * var(--u)); }
+.note-form textarea { height: calc(161 * var(--u)); padding: calc(10 * var(--u)) calc(12 * var(--u)); resize: none; }
+.note-form input:focus-visible,
+.note-form textarea:focus-visible { outline: 1px solid var(--ink-2); outline-offset: 0; }
+/* the count sits inside the message box, bottom-right */
+.note-form__count {
+  position: absolute;
+  right: calc(10 * var(--u));
+  bottom: calc(8 * var(--u));
+  font-size: max(9px, calc(10 * var(--u)));
+  opacity: 0.5;
+  pointer-events: none;
+}
+.note-form__trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+.note-form__colors { display: flex; flex-wrap: wrap; gap: 0 calc(6.5 * var(--u)); margin: 0; padding: 0; border: 0; }
+.note-form__colors legend { float: left; width: 100%; }
+.swatch { position: relative; cursor: pointer; }
+.swatch input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.swatch span {
+  display: block;
+  width: calc(40 * var(--u));
+  height: calc(40 * var(--u));
+  border-radius: calc(5 * var(--u));
+  box-shadow: inset 0 0 0 1px rgb(61 61 61 / 0.06);
+  transition: box-shadow 0.15s;
+}
+.swatch input:checked + span { box-shadow: inset 0 0 0 1.5px var(--ink-2); }
+.swatch input:focus-visible + span { outline: 2px solid #0062ff; outline-offset: 2px; }
+.swatch--green span  { background: #e1f1ab; }
+.swatch--purple span { background: #faebff; }
+.swatch--blue span   { background: #d8e7ff; }
+.swatch--gray span   { background: #e9eaf0; }
+
+.note-form__actions { display: flex; align-items: center; gap: 12px; margin-top: calc(18 * var(--u)); } /* Submit 33 below the squares */
+.note-form__submit:disabled { opacity: 0.5; cursor: progress; }
+.note-form__status { margin: 0; font-size: 12px; line-height: 20px; }
+
+/* ---- the wall ---- */
+.wall {
+  position: absolute;
+  top: 0;
+  left: calc(450 * var(--u));
+  right: calc(19 * var(--u));
+  bottom: calc(24 * var(--u));
+  display: flex;
+  flex-direction: column;
+  gap: calc(11 * var(--u));
+}
+.wall__list {
+  display: flex;
+  flex-direction: row-reverse;   /* newest on the right, open; older ones are strips to its left (Figma) */
+  gap: calc(4 * var(--u));
+  height: calc(455 * var(--u));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.wall__list::-webkit-scrollbar { display: none; }
+.wall__bar { display: flex; justify-content: flex-end; }
+
+.message {
+  position: relative;
+  flex: 0 0 calc(29 * var(--u));
+  min-width: 0;
+  overflow: hidden;
+  color: #000;
+  font-size: max(13px, calc(18 * var(--u)));
+  line-height: calc(32 * var(--u));
+  transition: flex-grow var(--dur, 0.5s) var(--ease), flex-basis var(--dur, 0.5s) var(--ease);
+}
+.message.is-open { flex: 1 0 calc(600 * var(--u)); }
+.message--green  { background: #e1f1ab; }
+.message--purple { background: #faebff; }
+.message--blue   { background: #d8e7ff; }
+.message--gray   { background: #e9eaf0; }
+
+/* the open card's contents, laid out at the open width so they don't reflow while it grows */
+.message__inner {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--open-w, calc(740 * var(--u)));
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.message.is-open .message__inner { opacity: 1; transition: opacity 0.35s 0.15s; }
+.message__name { position: absolute; top: calc(9 * var(--u)); left: calc(20 * var(--u)); right: 50%; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.message__time { position: absolute; top: calc(9 * var(--u)); right: calc(19 * var(--u)); margin: 0; }
+.message__place { position: absolute; bottom: calc(11 * var(--u)); right: calc(24 * var(--u)); margin: 0; }
+.message__body {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(calc(529 * var(--u)), calc(100% - 80 * var(--u)));
+  max-height: calc(100% - 110 * var(--u));
+  overflow: auto;
+  margin: 0;
+  transform: translate(-50%, -50%);
+  line-height: calc(28 * var(--u));
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+.message.is-new { animation: message-in 0.5s var(--ease) both; }
+@keyframes message-in { from { opacity: 0; } }
+.wall__empty { flex: 1; display: grid; place-items: center; background: #f6f6f9; color: var(--ink-2); font-size: max(13px, calc(18 * var(--u))); }
+
+/* "View as grid": every message as its own card */
+.wall.is-grid .wall__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(300 * var(--u)), 1fr));
+  align-content: start;
+  height: auto;
+  flex: 0 1 auto;    /* as tall as the cards, scrolling once they reach the bottom; the button stays under them */
+  min-height: 0;
+  overflow: hidden auto;
+}
+.wall.is-grid .message { min-height: calc(300 * var(--u)); font-size: max(13px, calc(16 * var(--u))); line-height: calc(24 * var(--u)); }
+.wall.is-grid .message__body { line-height: calc(24 * var(--u)); }
+.wall.is-grid .message__inner { position: static; width: auto; height: 100%; opacity: 1; display: grid; grid-template-rows: auto 1fr auto; gap: calc(12 * var(--u)); padding: calc(12 * var(--u)) calc(16 * var(--u)); box-sizing: border-box; }
+.wall.is-grid .message__name,
+.wall.is-grid .message__time,
+.wall.is-grid .message__place,
+.wall.is-grid .message__body { position: static; transform: none; width: auto; max-height: none; }
+.wall.is-grid .message__name { grid-row: 1; grid-column: 1; }
+.wall.is-grid .message__time { grid-row: 1; grid-column: 1; justify-self: end; font-size: 0.8em; }
+.wall.is-grid .message__body { grid-row: 2; align-self: center; }
+.wall.is-grid .message__place { grid-row: 3; justify-self: end; font-size: 0.8em; }
+
+/* phones and portrait windows: the form, then every message as a card */
+@media (max-width: 760px), (orientation: portrait) {
+  .page-messages .statement { white-space: normal; font-size: 34px; line-height: 1.1; }
+  .messages { position: static; display: flex; flex-direction: column; gap: 40px; padding: 8px 16px 48px; }
+  .note-form { position: static; width: auto; gap: 12px; }
+  .note-form__label { font-size: 14px; line-height: 28px; }
+  .note-form input[type="text"] { height: 44px; padding: 0 12px; border-radius: 6px; font-size: 16px; }
+  .note-form textarea { height: 160px; padding: 10px 12px; border-radius: 6px; font-size: 16px; }
+  .note-form__colors { gap: 8px; }
+  .swatch span { width: 40px; height: 40px; border-radius: 5px; }
+  .note-form__actions { margin-top: 12px; }
+  .wall { position: static; }
+  .wall__bar { display: none; }
+  .wall .wall__list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; height: auto; overflow: visible; }
+  .wall .message { min-height: 220px; font-size: 16px; line-height: 22px; }
+  .wall .message__inner { position: static; width: auto; height: 100%; opacity: 1; display: grid; grid-template-rows: auto 1fr auto; gap: 12px; padding: 12px 14px; box-sizing: border-box; }
+  .wall .message__name,
+  .wall .message__time,
+  .wall .message__place,
+  .wall .message__body { position: static; transform: none; width: auto; max-height: none; }
+  .wall .message__name { grid-row: 1; grid-column: 1; }
+  .wall .message__time { grid-row: 1; grid-column: 1; justify-self: end; font-size: 13px; }
+  .wall .message__body { grid-row: 2; align-self: center; line-height: 22px; }
+  .wall .message__place { grid-row: 3; justify-self: end; font-size: 13px; }
+}
+
 /* ---------- Work ⇄ Archive page change ----------
    The headline shrinks / grows and moves into place, and the header line slides up / down,
    instead of the page jumping (cross-page View Transitions; browsers without them just switch). */
@@ -1269,12 +1495,15 @@ html:has(body.page-about),
   .nav__work span    { view-transition-name: nav-work; }
   .nav__archive span { view-transition-name: nav-archive; }
   .nav__about span   { view-transition-name: nav-about; }
+  .nav__messages span { view-transition-name: nav-messages; }
   ::view-transition-old(nav-work),
   ::view-transition-old(nav-archive),
-  ::view-transition-old(nav-about) { display: none; }
+  ::view-transition-old(nav-about),
+  ::view-transition-old(nav-messages) { display: none; }
   ::view-transition-new(nav-work),
   ::view-transition-new(nav-archive),
-  ::view-transition-new(nav-about) { animation: none; }   /* scaled by its group, no fade */
+  ::view-transition-new(nav-about),
+  ::view-transition-new(nav-messages) { animation: none; }   /* scaled by its group, no fade */
   .site-header { view-transition-name: site-header; }
 
   ::view-transition-group(*) {
@@ -1326,6 +1555,7 @@ body.show-guides .projects { outline: 1px dashed var(--guide); }
   .statement .rest { opacity: 1; }
   .desktop-break { display: none; }
   .nav { position: static; transform: none; justify-content: flex-end; gap: 10px; }
+  .nav .nav__messages { margin-left: 16px; }
   .nav a { width: auto; height: auto; padding: 5px 15px; }
 
   .projects {
@@ -1481,6 +1711,10 @@ body.show-guides .projects { outline: 1px dashed var(--guide); }
   }
   .site-header.is-menu-open .nav { display: flex; }
   .site-header .nav a { padding: 4px 0; justify-content: flex-end; }
+  .site-header.is-menu-open { overflow: visible; }          /* four links now reach past the header line */
+  .site-header .nav .nav__messages { margin-left: 0; padding-top: 6px; }
+  .site-header .nav .nav__icon { width: 18px; height: 18px; transform: none; }
+  .site-header .nav a.nav__messages[aria-current="page"] span::after { bottom: -3px; }
 }
 
 /* Colophon and © (About), very small, in the bottom-right corner */
