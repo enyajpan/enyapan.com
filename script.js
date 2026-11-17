@@ -19,6 +19,21 @@ const PROJECTS = [
     },
   },
   {
+    // From the Figma frame "dew"
+    title: "Dew: Skincare Picked by People Like You",
+    eyebrow: "Conceptual Web / Mobile App",
+    tagline: "How might we help someone choose skincare that works for their skin, and give them a reason to come back after the first bottle?",
+    // Figma "hero": the water video with the Picked for you screen centered on top
+    media: { type: "video", src: "assets/dew/dew_thumbnail.mp4", overlay: "assets/dew/web/poster-picked.jpg" },
+    caseStudy: {
+      meta: [
+        { label: "Timeline", value: "Fall 2026" },
+        { label: "Scope", value: "E2D Product Design // Full Stack Web Development // Design Systems" },
+      ],
+      body: dewBodyHTML(), // the dx-app layout (.dx), below
+    },
+  },
+  {
     // From the Figma frame "in-case-of-loss"
     title: "In case of loss, please return to:",
     eyebrow: "RISD Graphic Design Degree Project", // small label above the title
@@ -122,20 +137,22 @@ const PROJECTS = [
       body: samsungBodyHTML(), // its own layout, below
     },
   },
-  {
-    // From the Figma frame "formel". No write-up: it opens like the others, and a click links out.
-    title: "Formel Skin",
-    eyebrow: "Brand &amp; Marketing",
-    media: { type: "video", src: "assets/formel/formel_thumbnail.mp4" },
-    link: "https://www.formelskin.de/slow-aging-uebersicht",
-    caseStudy: {
-      meta: [
-        { label: "Timeline", value: "October 2024" },
-        { label: "Scope", value: "Product Design // Marketing" },
-      ],
-    },
-  },
 ];
+
+// Removed from the list for now (Figma frame "formel (removed for now)"). To bring it back, move this
+// entry into PROJECTS above.
+// {
+//   title: "Formel Skin",
+//   eyebrow: "Brand &amp; Marketing",
+//   media: { type: "video", src: "assets/formel/formel_thumbnail.mp4" },
+//   link: "https://www.formelskin.de/slow-aging-uebersicht",
+//   caseStudy: {
+//     meta: [
+//       { label: "Timeline", value: "October 2024" },
+//       { label: "Scope", value: "Product Design // Marketing" },
+//     ],
+//   },
+// },
 
 const root = document.documentElement;
 const header = document.querySelector(".site-header");
@@ -178,7 +195,7 @@ function moreHTML() {
     </div>`;
 }
 
-// Real project content (currently project 2, from the Figma frame "in-case-of-loss")
+// Real project content (currently project 3, from the Figma frame "in-case-of-loss")
 // the chevron of the header's "Scroll to view" button
 const CHEVRON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M1 11L8 5L15 11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
@@ -265,7 +282,189 @@ function caseStudyHTML(p) {
     ${cs.assets ? `<div class="case__assets${cs.assetsInset ? " case__assets--inset" : ""}">${cs.assets.map(assetOrGrid).join("")}</div>` : ""}`;
 }
 
-// Project 4's write-up (Figma frame "samsung"). The image blocks are 2x exports of the Figma groups.
+// Project 2's write-up (Figma frame "dew"). Uses the dx-app layout (.dx) plus dw- pieces: photo-backed
+// panels (backgrounds exported from Figma, assets/dew/fall26/web) with the live-site recordings on top.
+// Screen recordings load once they're near the screen.
+function dewBodyHTML() {
+  const DW = "assets/dew/";
+  const V2 = DW + "fall26/web/";
+  const label = (t) => `<p class="case__label">${t}</p>`;
+  const bg = (name) => `style="background-image: url('${V2}bg-${name}.jpg')"`;
+  const char = (file, w, h, cls = "") =>
+    `<img class="dw-char${cls}" src="${V2}char-${file}.svg" width="${w}" height="${h}" alt="" aria-hidden="true">`;
+  const screen = (name) =>
+    `<video class="dw-screen" data-src="${encodeURI(DW + name + ".mp4")}" poster="${encodeURI(DW + "web/poster-" + name + ".jpg")}" width="1440" height="900" autoplay muted loop playsinline disablepictureinpicture disableremoteplayback preload="none" tabindex="-1" aria-hidden="true"></video>`;
+  // numbered cards in white under a panel's caption (Figma "creator pages")
+  const cards = (items) => `
+          <hr class="dw-panel__rule">
+          <div class="dw-panel__cards" style="--n: ${items.length}">
+            ${items.map((t, i) => `<div class="dw-panel__card"><span class="dx-num">${i + 1}</span><p>${t}</p></div>`).join("")}
+          </div>`;
+  // a lime tag (optional), the numbered heading, then the recording on its photo panel
+  // `more` adds further recordings under the same heading, each on its own panel.
+  const feature = ({ tag, heading, video, panel, caption, captionW = 800, extra = "", more = [] }) => `
+      <div class="dw-feature">
+        ${tag ? `<p class="dw-tag">${tag}</p>` : ""}
+        <h3 class="dx-heading">${heading}</h3>
+        <div class="dw-panel" ${bg(panel)}>
+          ${screen(video)}
+          <p class="dw-panel__caption" style="--w: ${captionW}">${caption}</p>${extra}
+        </div>${more.map((m) => `
+        <div class="dw-panel" ${bg(m.panel)}>
+          ${screen(m.video)}
+          <p class="dw-panel__caption" style="--w: ${m.captionW ?? 800}">${m.caption}</p>
+        </div>`).join("")}
+      </div>`;
+  const principle = (icon, w, h, title, text) => `
+        <div class="dw-principle">${char(icon, w, h)}<div><p class="dx-lead">${title}</p><p>${text}</p></div></div>`;
+
+  return `
+    <section class="dx-stack dx-overview">
+      ${label("Overview")}
+      <p class="dx-heading">How might we help someone choose skincare that works for their skin, and give them a reason to come back after the first bottle?</p>
+    </section>
+
+    <section class="dx-stack dx-wide dx-context">
+      ${label("Summary")}
+      <p>Dew is a web app that matches you with people who share your skin type, climate, concerns and goals. It ranks products by how those people rated them, picks one product for each step of your routine, and asks for a two-minute check-in each week so your own results sharpen the next pick. The idea arrived as two products: a tracker (weekly photos, routine logs, weather, reorder prompts) and a community (reviews filterable by skin type, AI drafts of your review from your tracker notes). I was the only designer, and took it from a page of notes to a live site with more than 56,000 real reviews, an AI assistant and a weekly tracker.</p>
+    </section>
+
+    <section class="dx-stack dx-problem">
+      ${label("The Problem")}
+      <div class="dw-box dw-problem" ${bg("problem")}>
+        <p>Every brand promises the same results, so people can’t tell what will work for their skin. They end up in one of two places:</p>
+        <div class="dw-problem__cards">
+          <div class="dw-problem__card"><span class="dx-num">1</span><div><p class="dx-lead">Decision paralysis before buying</p><p>There are dozens of near-identical products and reviews from strangers whose skin may be nothing like yours.</p></div></div>
+          <div class="dw-problem__card"><span class="dx-num">2</span><div><p class="dx-lead">No reason to stay after buying</p><p>Results are slow and hard to measure, so people often stop, switch, and start over. Switching costs nothing.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="dx-rule">
+
+    <section class="dx-opportunity">
+      <section class="dx-stack">
+        ${label("The Opportunity")}
+        <div class="dw-box dw-opp" ${bg("opp")}>
+          ${char("treat2", 63, 61, " dw-opp__left")}
+          <p class="dx-heading">How might we make every check-in make the next recommendation smarter, for you and for other people with skin like yours?</p>
+          ${char("hydrate", 56, 59, " dw-opp__right")}
+          <p class="dw-opp__text">Your weekly results become a review, reviews rank products for people with your skin, Dew picks your routine from those rankings, and you track it. More tracked results make the picks more accurate, and better picks bring new people in to track their own.</p>
+        </div>
+      </section>
+      <section class="dx-stack">
+        ${label("Our Goal")}
+        <p>Help people land on a routine that works for their skin in minutes, then give them a reason to log how it is going every week.</p>
+      </section>
+    </section>
+
+    <hr class="dx-rule">
+
+    <section class="dx-stack dw-section">
+      ${label("The Flywheel")}
+      <h3 class="dx-heading">Every check-in makes both yours and someone else’s next pick better</h3>
+      <p class="dw-intro">The idea arrived as two separate features: a tracker component and a community/social component. Each half is weak on its own, where trackers lose people once the novelty wears off, and review sites are full of strangers. Joined together, each check-in becomes evidence for someone like you, and that evidence is what makes the next pick worth trusting.</p>
+      <div class="dw-flywheel" ${bg("flywheel")}>
+        <img class="dw-flywheel__diagram" src="${V2}flywheel.svg" width="518" height="369" alt="A loop: track your skin, results become a review, reviews rank products for people like you, Dew picks your routine, and back to tracking. In the middle: more data, better picks.">
+        <p class="dw-flywheel__text">Every check-in is a data point for the people who share your skin. More tracked results make the rankings more accurate, and better picks bring new people in to track their own.</p>
+      </div>
+    </section>
+
+    <section class="dx-stack dw-section">
+      ${label("Design Principles")}
+      <div class="dw-principles2">
+        ${principle("cleanse", 54, 43, "Decide for users", "Provide one product per routine step, not a results page. Cap rankings are capped so as to not overwhelm.")}
+        ${principle("protect", 58, 54, "Lead with the verdict", "Buy or Don’t buy, the share of people like you who say Buy, and weeks to results come before any review text.")}
+        ${principle("treat", 45, 43, "Prove it with people who are similar to you", "Every pick shows how many matched people back it and how similar they are to users.")}
+        ${principle("flame", 45, 43, "Every check-in pays you back", "Logging earns points, re-ranks your shelf, and sharpens your picks.")}
+      </div>
+    </section>
+
+    <hr class="dx-rule">
+
+    <section class="dx-stack dw-section">
+      ${label("The Solution")}
+      <h3 class="dx-heading">Dew is a skincare discovery and retention platform where people who share the same profile as you pick your everyday products.</h3>
+      <p class="dw-intro">A three-column web app. Your shelf and a daily check-in stay on the left of every page, the main column changes with the task, and Ask Dew is one tap away in the corner. Screens below are from the live site, dew-skincare.vercel.app.</p>
+    </section>
+
+    <section class="dw-features">
+      ${feature({ tag: "Setting up", heading: "1. A 4-step profile setup builds your match pool before you see a single product.",
+        video: "onboarding", panel: "onboarding",
+        caption: "Create an account, then four quick steps: your skin, where and how you live (Dew looks up your city’s humidity and UV), your goals and budget, and the products already on your shelf. Each layer narrows the pool, so the profile feels like it is working for you." })}
+      ${feature({ tag: "Tracking &amp; Ordering", heading: "2. Weekly check-ins for users to consistently log their progress is what feeds the recommendation model.",
+        video: "checkin", panel: "checkin", captionW: 462,
+        caption: "The weekly check-in opens over Explore: your skin overall, each product you are using, and, only at a product’s results week, Buy or Don’t buy. It takes about two minutes, and every answer re-ranks your shelf and your picks." })}
+      ${feature({ heading: "3. Tracking is the retention engine that rewards users with samples and discounts.",
+        video: "points", panel: "points", captionW: 752,
+        caption: "Dew is as much a retention product as a discovery one. The picks only get sharper if people keep logging after the first bottle. So the routine tracker is a game. Almost every point comes from tracking, not spending, and points buy the one thing that makes trying a new product less risky: a free box of travel-size minis.",
+        extra: cards([
+          "Reward the habit, not the purchase: the fastest way to a reward is to keep logging.",
+          "Points take the risk out of trying and smaller samples make it easier to try something new.",
+          "Every sample ends in a verdict at certain milestones: Is this really working?",
+          "Streaks, challenges, and a points-to-go bar on your profile keep the next reward in view.",
+        ]) })}
+      ${feature({ heading: "4. Reorder what works, and replace what doesn’t.",
+        video: "refill", panel: "refill",
+        caption: "The moment a user runs out of product is when they are most likely to drift to a different store or a different routine. Dew uses your skincare logs to see it coming. It estimates when each product will run out, and your own check-ins decide what happens next, giving you the option to refill what is working, or swap out what isn’t with another product that people like you rate highest for that step of the routine." })}
+      ${feature({ tag: "Personalization", heading: "5. Picked For You is a personalized skincare bundle that addresses decision paralysis directly.",
+        video: "picked", panel: "picked", captionW: 492,
+        caption: "Dew keeps what already works on your shelf, fills only the gaps, and shows the share of matched people who say Buy and how many weeks results took. Try it full size, or sample the same products as minis first." })}
+      ${feature({ heading: "6. Create routines based on the real, effective routines of their friends or creators they follow so that starting a new routine doesn’t mean starting from scratch.",
+        video: "routines", panel: "checkin", captionW: 752,
+        caption: "Routines for you has three ways in: Dew’s pick, a routine from someone you follow, or one built from your Want To Try list. Pick a goal and you see what worked for friends and creators with skin like yours: their weekly check-ins, when they added each product and what they’d change. “Make it mine” merges their routine with your shelf, so you only buy the steps you’re missing.",
+        extra: cards([
+          "Pick a goal and see the most common routine among the people you follow, and how many kept it.",
+          "Open one person’s routine: their check-ins week by week, including the weeks that got worse.",
+          "Make it yours: what you already have, what’s close enough, and only the gap goes in your box.",
+        ]) })}
+      ${feature({ heading: "7. As you browse reviews and save products to your Want To Try list, Dew creates a routine based off of these products that would go together.",
+        video: "wanttotry", panel: "picked", captionW: 752,
+        caption: "Dew picks one saved product per routine step, the one people with your skin rate highest, and leaves out extras or doubles. Swap any step for something else you saved, then buy the routine full size or sample it as minis with points." })}
+      ${feature({ tag: "Social", heading: "8. Your skin community feed consists of peer and creator reviews.",
+        video: "community", panel: "community",
+        caption: "The People tab is one feed of reviews from friends, creators and members with skin like yours, filterable to Everyone, Friends or Creators. Mark a review helpful, reply to it, or save the product to your Want To Try list. It is where you follow people whose skin is like yours, see what is in their routines, and learn from what worked and what didn’t. It is also there for something product pages can’t give: for acne, rosacea and other conditions that carry stigma, seeing someone with your skin share their progress week by week is a reminder that you are not alone." })}
+      ${feature({ heading: "9. Follow creators and friends whose skin profile matches yours, and shop their shelves by comparing them to yours.",
+        video: "creators", panel: "creators",
+        caption: "People already pick skincare by watching creators, but a creator’s routine is scattered across videos, captions and affiliate links. A creator page puts all of it in one place, like a link in bio for skincare: every product they use, ranked by them. Creators are then matched to you on skin type, climate and age (the similarity score). Every page has a Diary of their check-ins and a Compare shelves button that shows what they use that you don’t, ready to save or add to your cart.",
+        extra: cards([
+          "For users to find products and routines that they trust from the creators they love.",
+          "For creators to have one link to showcase all products (both sponsored and unsponsored).",
+          "For brands to be discoverable and partnerships to continue past the affiliate program.",
+        ]) })}
+      ${feature({ heading: "10. Your profile tracks your progress and you can edit your page that is shown to the public.",
+        video: "profile", panel: "points", captionW: 752,
+        caption: "My page is what other people see: your products, a diary of your journey and your reviews. My progress is private: your daily log, routine completion, challenges and milestones, and finishing a challenge drafts a post you can share to your page.",
+        more: [{ video: "profile-edit", panel: "onboarding", captionW: 752,
+          caption: "Moved, or changed your diet? Updating your skin profile re-ranks your picks. Edit your page opens an editor beside a live preview of your public page, and Expand shows it exactly as visitors will. Your photos and check-ins stay private unless you add them." }] })}
+      ${feature({ tag: "Search", heading: "11. <b>56,000+</b> pooled public reviews across <b>18,000+</b> products are searchable by skin type and summarized by AI so that all product information is accessible from one consolidated site.",
+        video: "reviews", panel: "reviews", captionW: 682,
+        caption: "A daily scraper pulls reviews and star ratings from brand sites into one feed. Each product page summarizes the pros and cons with how often they come up (many, some, a few), then lists reviews from people with your skin type first, each linking back to where it was originally posted." })}
+      ${feature({ tag: "Help / Support", heading: "12. Ask Dew is an AI chatbot that answers with your profile, your shelf and real review data.",
+        video: "askdew", panel: "askdew",
+        caption: "An assistant powered by Claude, grounded in your skin profile, your shelf and Dew’s review summaries. It sits in the bottom corner of every page in the design system’s light blue and opens over the content, so asking never means leaving." })}
+    </section>
+
+    <hr class="dx-rule">
+
+    <section class="dx-stack dw-section">
+      ${label("Information Architecture")}
+      <h3 class="dx-heading">Dew’s information architecture is built on four tabs and a skincare bathroom shelf as the through line.</h3>
+      <p class="dw-intro">The first run is a straight-line 1/ sign up, 2/ build a four-step profile, and 3/ see your match pool. After that the structure stays flat.<br>4 tabs hold everything the user can browse (in Hi-fi v8, Creators and Community became one People tab), while the shelf panel and Ask Dew stay on every page, so tracking and chatting never means navigating away.</p>
+      <div class="dw-ia2"><img src="${V2}ia.png" width="3330" height="1176" alt="Dew site map: Welcome, Skin profile, Explore, People (friends, creators and members in one tab), Public reviews, Picked for you (picked by Dew or from people like you), Check-in, Cart, Search and Profile, each with its pages and flows" loading="lazy" decoding="async"></div>
+    </section>
+
+    <hr class="dx-rule">
+
+    <section class="dx-stack dw-section">
+      ${label("Design System")}
+      <h3 class="dx-heading">A lightweight design system informs all brand and component decisions.</h3>
+      <p class="dw-intro">Every color, size and corner in the Dew Figma file is a variable, and the same values are CSS variables on the live site, so one change updates every screen.</p>
+      <div class="dw-ds2"><img src="${V2}ds.png" width="2220" height="8981" alt="The Dew design system: foundations (color, typography, spacing, radius and elevation, layout, iconography and imagery, accessibility), components and patterns, including the Hi-fi v8 patterns: kind tag, diary entry, compare shelves, people you follow, why this, peer routine card, live preview editor and share a moment" loading="lazy" decoding="async"></div>
+    </section>`;
+}
+
+// Project 5's write-up (Figma frame "samsung"). The image blocks are 2x exports of the Figma groups.
 function samsungBodyHTML() {
   const SX = "assets/samsung/web/";
   const img = (file, w, h, cls = "") =>
@@ -353,7 +552,8 @@ function mediaHTML(media) {
     return `<div class="media-pair">${media.srcs.map((src) => `<img src="${encodeURI(src)}" alt="" loading="lazy">`).join("")}</div>`;
   }
   if (media.type === "video") {
-    return `<video${media.cls ? ` class="${media.cls}"` : ""} src="${encodeURI(media.src)}"${media.sound ? " data-sound" : " autoplay muted"} loop playsinline disablepictureinpicture disableremoteplayback preload="auto" tabindex="-1" aria-hidden="true"></video>`;
+    return `<video${media.cls ? ` class="${media.cls}"` : ""} src="${encodeURI(media.src)}"${media.sound ? " data-sound" : " autoplay muted"} loop playsinline disablepictureinpicture disableremoteplayback preload="auto" tabindex="-1" aria-hidden="true"></video>`
+      + (media.overlay ? `<img class="media-overlay" src="${encodeURI(media.overlay)}" width="1440" height="900" alt="" decoding="async">` : "");
   }
   // Archive covers placed like their Figma crop (only in the open card; narrow strips fill as usual)
   if (media.crop) {
@@ -1265,7 +1465,7 @@ document.querySelectorAll("video[data-sound]").forEach((video) => {
 // The in-case-of-loss videos are large (23–102 MB), so nothing downloads until a
 // video is about to scroll into view, and each pauses again once it leaves.
 
-const caseVideos = document.querySelectorAll("video.case__asset:not(.case__player-video), video.dx-phone, video.sx-video");
+const caseVideos = document.querySelectorAll("video.case__asset:not(.case__player-video), video.dx-phone, video.dw-screen, video.sx-video");
 
 const videoObserver = new IntersectionObserver((entries) => {
   entries.forEach(({ target: video, isIntersecting }) => {

@@ -791,6 +791,7 @@ img.is-preview { background: center / cover no-repeat; } /* the tiny copy (set i
 .dx {
   --t12: clamp(var(--text-min), calc(12 * var(--s)), 12px);
   --t14: clamp(var(--text-min), calc(14 * var(--s)), 14px);
+  --t16: clamp(var(--text-min), calc(16 * var(--s)), 16px);
   --t18: clamp(var(--text-min), calc(18 * var(--s)), 18px);
   --t20: clamp(var(--text-min), calc(20 * var(--s)), 20px);
   --t24: clamp(var(--text-min), calc(24 * var(--s)), 24px);
@@ -980,6 +981,207 @@ img.is-preview { background: center / cover no-repeat; } /* the tiny copy (set i
 /* two lessons, 16 apart: a heading, then 16 below, the text */
 .dx-takeaways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(16 * var(--s)); padding-right: calc(14 * var(--s)); }
 .dx-lesson { display: flex; flex-direction: column; gap: calc(16 * var(--s)); }
+
+/* ---------- Dew (Figma frame "dew"): the dx-app layout plus desktop screens ---------- */
+.dw-intro { max-width: 90.54%; }
+.dw-section > .dx-heading + .dw-intro { margin-top: calc(4 * var(--s)); }
+/* a desktop recording or screenshot inside a phone-style panel: full width, caption below */
+.dx-panel.dw-panel { flex-direction: column; gap: calc(16 * var(--s)); padding: calc(30 * var(--s)); }
+.dx-phone.dw-video { width: 100%; aspect-ratio: 1440 / 900; object-fit: cover; border-radius: calc(6 * var(--s)); box-shadow: 0 calc(10 * var(--s)) calc(28 * var(--s)) rgba(20, 28, 17, 0.14); background: #fff; }
+.dw-img, .dw-thumb { display: block; width: 100%; height: auto; }
+.dw-thumb { aspect-ratio: 1440 / 900; object-fit: cover; object-position: top left; border-radius: calc(6 * var(--s)); box-shadow: 0 calc(6 * var(--s)) calc(20 * var(--s)) rgba(20, 28, 17, 0.12); }
+
+/* the strip of five screens on a light blue band */
+.dx-strip.dw-strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: calc(16 * var(--s)); padding: calc(36 * var(--s)) calc(30 * var(--s)) calc(30 * var(--s)); background: #ebf6fb; border-radius: calc(4 * var(--s)); }
+.dw-strip figure, .dw-thumbs figure { margin: 0; display: flex; flex-direction: column; gap: calc(10 * var(--s)); }
+.dw-strip figcaption, .dw-thumbs figcaption { font-size: var(--t12); line-height: var(--l18); }
+.dw-thumbs figcaption strong { display: block; font-weight: 500; }
+
+.dw-principles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.dw-principles .dx-num-box { gap: calc(18 * var(--s)); padding-inline: calc(12 * var(--s)); }
+
+/* information architecture: drawn in the site font, scrolls sideways when it can't fit */
+.dw-ia { contain: inline-size; margin-top: calc(24 * var(--s)); border: 1px solid #e2e4dc; border-radius: calc(8 * var(--s)); overflow-x: auto; background: #fff; }
+.dw-ia__svg { display: block; width: 100%; min-width: 760px; height: auto; }
+.dw-ia__svg--map { min-width: 1500px; }
+.dw-ia--map { background: #F7F6F2; }
+.dw-ia__svg text { font-family: "ABC Monument Grotesk", system-ui, sans-serif; }
+.dw-ia__svg .n { font-size: 12.5px; fill: #141c11; }
+.dw-ia__key { display: flex; flex-wrap: wrap; gap: calc(8 * var(--s)) calc(22 * var(--s)); margin-top: calc(14 * var(--s)); font-size: var(--t12); }
+.dw-ia__key span { display: inline-flex; align-items: center; gap: calc(8 * var(--s)); }
+.dw-ia__key i { width: 22px; height: 14px; border-radius: 4px; border: 1.2px dashed; }
+.dw-key--green { border-color: #2f6b1f; background: rgba(203, 233, 66, 0.14); }
+.dw-key--blue  { border-color: #4f7ea6; background: #ebf6fb; }
+.dw-key--red   { border-color: #c2412d; background: rgba(194, 65, 45, 0.06); }
+.dw-key-text b { font-weight: 500; color: #c2412d; margin-right: calc(8 * var(--s)); letter-spacing: 0.06em; }
+.dw-data-cards { margin-top: calc(32 * var(--s)) !important; }
+
+.dw-ds { display: flex; flex-direction: column; gap: calc(16 * var(--s)); margin-top: calc(24 * var(--s)); }
+
+/* exploration: a screen with numbered pins, then the notes in two columns */
+.dw-annots { display: flex; flex-direction: column; gap: calc(56 * var(--s)); margin-top: calc(24 * var(--s)); }
+.dw-annot { display: flex; flex-direction: column; gap: calc(16 * var(--s)); }
+.dw-annot__shot { position: relative; border-radius: calc(10 * var(--s)); box-shadow: 0 calc(10 * var(--s)) calc(28 * var(--s)) rgba(20, 28, 17, 0.14); }
+.dw-annot__shot .dw-img { border-radius: calc(10 * var(--s)); }
+.dw-pin { position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; background: #cbe942; color: #113916; box-shadow: 0 0 0 2.5px #113916; font-size: 12px; line-height: 26px; text-align: center; font-weight: 500; }
+.dw-notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(12 * var(--s)) calc(30 * var(--s)); }
+.dw-note { display: flex; gap: calc(10 * var(--s)); }
+.dw-note__num { flex: none; width: 22px; height: 22px; border-radius: 50%; background: #cbe942; color: #113916; font-size: 11px; line-height: 22px; text-align: center; font-weight: 500; }
+.dw-why { border-left: 3px solid #cbe942; padding: calc(4 * var(--s)) 0 calc(4 * var(--s)) calc(16 * var(--s)); display: flex; flex-direction: column; gap: calc(2 * var(--s)); }
+
+/* iterations */
+.dw-subhead { margin-top: calc(32 * var(--s)) !important; }
+.dw-thumbs { display: grid; gap: calc(14 * var(--s)); margin-top: calc(14 * var(--s)) !important; }
+.dw-thumbs--5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.dw-thumbs--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.dw-thumbs--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.dw-cuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(10 * var(--s)); margin-top: calc(14 * var(--s)) !important; }
+.dw-cut { background: #f4f4f4; border-radius: calc(4 * var(--s)); padding: calc(14 * var(--s)) calc(16 * var(--s)); display: flex; flex-direction: column; gap: calc(4 * var(--s)); }
+.dw-cut__title { text-decoration: line-through; text-decoration-thickness: 1px; }
+
+/* ---------- Dew, Figma frame "dew" (fall 2026 layout) ---------- */
+/* thumbnail: the Picked for you screen centered on the water video, 733 × 458 of the 1150 × 621 cover
+   (the cover fills the box like object-fit: cover, so k = the larger of width / 1150 and height / 621) */
+.card__media img.media-overlay {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: auto;
+  height: max(39.826cqi, 73.75%);
+  aspect-ratio: 1440 / 900;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+  border-radius: max(0.699cqi, 1.294%);
+  box-shadow: 0 1.26cqi 3.49cqi rgba(20, 28, 17, 0.16);
+}
+
+/* photo-backed boxes: the background is a 2x export of the Figma fill, cropped to the box */
+.dw-box, .dw-flywheel, .dw-panel { background: #dfe9dc center / cover no-repeat; border-radius: calc(16 * var(--s)); }
+
+/* The Problem: 36 / 48 padding, the sentence, then two cream cards 24 apart */
+.dw-problem { display: flex; flex-direction: column; gap: calc(16 * var(--s)); padding: calc(36 * var(--s)) calc(48 * var(--s)) calc(48 * var(--s)); }
+.dw-problem__cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(24 * var(--s)); }
+.dw-problem__card {
+  display: flex;
+  gap: calc(24 * var(--s));
+  padding: calc(26 * var(--s)) calc(18 * var(--s)) calc(26 * var(--s)) calc(24 * var(--s));
+  background: #f7f6f3;
+  border-radius: calc(16 * var(--s));
+  box-shadow: 0 calc(4 * var(--s)) calc(20 * var(--s)) rgba(0, 0, 0, 0.06);
+}
+.dw-problem__card .dx-num { width: calc(25 * var(--s)); }
+.dw-problem__card .dx-lead + p, .dw-principle .dx-lead + p { margin-top: calc(6 * var(--s)); }
+
+/* The Opportunity: the question centered between two characters, the loop below */
+.dw-opp {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 723fr) minmax(0, 1fr);
+  align-items: center;
+  gap: calc(10 * var(--s)) calc(14 * var(--s));
+  padding: calc(36 * var(--s)) calc(48 * var(--s));
+  text-align: center;
+}
+.dw-opp .dx-heading { grid-column: 2; }
+.dw-opp__left  { grid-column: 1; justify-self: center; width: calc(63 * var(--s)); }
+.dw-opp__right { grid-column: 3; justify-self: center; width: calc(56 * var(--s)); }
+.dw-opp__text { grid-column: 1 / -1; }
+.dw-char { display: block; height: auto; flex: none; }
+
+/* The Flywheel: the loop (462) | 48 | the sentence in white, on dark green */
+.dw-flywheel {
+  display: grid;
+  grid-template-columns: minmax(0, 518fr) minmax(0, 441fr);   /* the loop's export keeps its 56 px left margin */
+  column-gap: calc(48 * var(--s));
+  align-items: center;
+  margin-top: calc(24 * var(--s));
+  padding: 0 calc(56 * var(--s)) 0 0;
+  min-height: calc(369 * var(--s));
+}
+.dw-flywheel__diagram { display: block; width: 100%; height: auto; }
+.dw-flywheel__text { color: #fff; font-size: var(--t20); line-height: 1.3; }
+
+/* Design principles: four light blue cards, two across, 16 apart */
+.dw-principles2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(16 * var(--s)); margin-top: calc(12 * var(--s)); }
+.dw-principle {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(18 * var(--s));
+  padding: calc(16 * var(--s)) calc(12 * var(--s)) calc(16 * var(--s)) calc(16 * var(--s));
+  background: #ebf6fa;
+  border-radius: calc(16 * var(--s));
+}
+.dw-principle .dw-char { width: calc(52 * var(--s)); margin-top: calc(8 * var(--s)); }
+
+/* the nine features: a lime tag, the numbered heading, then the recording on its photo panel */
+.dw-features { display: flex; flex-direction: column; gap: calc(34 * var(--s)); margin-top: calc(-8 * var(--s)); }
+.dw-feature { display: flex; flex-direction: column; gap: calc(10 * var(--s)); }
+.dw-feature .dx-heading b { font-weight: 500; color: #a1a261; }
+.dw-tag {
+  align-self: flex-start;
+  margin: 0 0 0 calc(10 * var(--s));
+  padding: 0 calc(10 * var(--s));
+  background: #cbe942;
+  border-radius: 100px;
+  font-size: var(--t12);
+  line-height: var(--l20);
+  text-transform: uppercase;
+}
+.dw-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(16 * var(--s));
+  padding: calc(40 * var(--s)) calc(40 * var(--s)) calc(28 * var(--s));
+  color: #fff;
+}
+.dw-screen {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1440 / 900;
+  object-fit: cover;
+  border-radius: calc(6 * var(--s));
+  box-shadow: 0 calc(10 * var(--s)) calc(28 * var(--s)) rgba(20, 28, 17, 0.14);
+  background: #fff;
+  pointer-events: none;
+}
+.dw-panel__caption { max-width: calc(var(--w) * var(--s)); font-weight: 500; font-size: var(--t14); line-height: var(--l18); text-align: center; }
+/* Tracking and Creators: a rule, then numbered cards across the panel */
+.dw-panel__rule { align-self: stretch; margin: 0; border: 0; border-top: 1px solid rgba(235, 246, 251, 0.6); }
+.dw-panel__cards { align-self: stretch; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: calc(10 * var(--s)); margin: 0; color: #ebf6fb; }
+.dw-panel__card { display: flex; gap: calc(18 * var(--s)); padding: calc(10 * var(--s)) calc(12 * var(--s)); }
+.dw-panel__card .dx-num { width: calc(26 * var(--s)); }
+.dw-panel__card p { font-weight: 500; font-size: var(--t16); line-height: var(--l20); }
+
+/* Design system: the Figma container (rows on #f7f6f2, 24 padding, 16 corners) as one 2x export, 40 below the heading */
+.dw-ds2 { margin-top: calc(40 * var(--s)); }
+.dw-ds2 img { display: block; width: 100%; height: auto; border-radius: calc(16 * var(--s)); }
+
+/* information architecture: scrolls sideways when it can't fit */
+.dw-ia2 { contain: inline-size; margin-top: calc(16 * var(--s)); overflow-x: auto; border-radius: calc(16 * var(--s)); }
+.dw-ia2 img { display: block; width: 100%; min-width: 900px; height: auto; }
+
+/* a narrow card or a phone: one column */
+@container (max-width: 699px) {
+  .dw-principles, .dw-notes, .dw-cuts, .dw-thumbs--4, .dw-thumbs--3 { grid-template-columns: minmax(0, 1fr); }
+  .dw-thumbs--5, .dx-strip.dw-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dw-intro { max-width: none; }
+  .dw-problem__cards, .dw-principles2, .dw-flywheel { grid-template-columns: minmax(0, 1fr); }
+  .dw-section ~ .dx-opportunity, .dx-problem + .dx-rule + .dx-opportunity { max-width: none; }
+  .dw-problem { padding: 5cqi; }
+  .dw-flywheel { padding: 4cqi 5cqi 6cqi; row-gap: 2cqi; }
+  .dw-flywheel__diagram { max-width: 420px; justify-self: center; }
+  .dw-opp { padding: 5cqi; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .dw-opp .dx-heading { grid-column: 1 / -1; grid-row: 2; }
+  .dw-opp__left, .dw-opp__right { grid-row: 1; width: 44px; }
+  .dw-opp__left { grid-column: 1; justify-self: start; }
+  .dw-opp__right { grid-column: 2; justify-self: end; }
+  .dw-panel { padding: 4cqi 4cqi 5cqi; }
+  .dw-panel__rule, .dw-panel__cards { margin-inline: 0; }
+  .dw-panel__cards { grid-template-columns: minmax(0, 1fr); }
+  .dw-principle .dw-char { width: 40px; }
+  body.is-collapsed .case--body .dx-strip.dw-strip { display: grid; padding: 4cqi; gap: 3cqi; }
+}
 
 /* ---------- Samsung (Figma frame "samsung", 1150 wide) ----------
    Same --s scale as dx-app: 1px at 1150, shrinking with the card. */
