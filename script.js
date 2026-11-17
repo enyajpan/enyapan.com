@@ -418,7 +418,7 @@ function dewBodyHTML() {
       ${feature({ tag: "Social", heading: "Your skin community feed consists of peer and creator reviews.",
         video: "community", panel: "community",
         caption: "Creators and Community are one People tab: a single feed of friends, creators and members with skin like yours, plus a Find people like you page, and you can compare your shelf with anyone’s to save or buy what they use that you don’t. It is where you follow people whose skin is like yours, see what is in their routines, and learn from what worked and what didn’t. It is also there for something product pages can’t give: for acne, rosacea and other conditions that carry stigma, seeing someone with your skin share their progress week by week is a reminder that you are not alone." })}
-      ${feature({ heading: "9. Follow creators and friends whose skin profile matches yours, and shop their shelves by comparing them to yours.",
+      ${feature({ heading: "Follow creators and friends whose skin profile matches yours, and shop their shelves by comparing them to yours.",
         video: "creators", panel: "creators",
         caption: "People already pick skincare by watching creators, but a creator’s routine is scattered across videos, captions and affiliate links. A creator page puts all of it in one place, like a link in bio for skincare: every product they use, ranked by them. Creators are then matched to you on skin type, climate and age (the similarity score). Every page has a Diary of their check-ins and a Compare shelves button that shows what they use that you don’t, ready to save or add to your cart.",
         extra: cards([
@@ -426,15 +426,15 @@ function dewBodyHTML() {
           "For creators to have one link to showcase all products (both sponsored and unsponsored).",
           "For brands to be discoverable and partnerships to continue past the affiliate program.",
         ]) })}
-      ${feature({ heading: "10. Your profile tracks your progress and you can edit your page that is shown to the public.",
+      ${feature({ heading: "Your profile tracks your progress and you can edit your page that is shown to the public.",
         video: "profile", panel: "onboarding",
         caption: "My page is what other people see: your products, a diary of your journey and your reviews. My progress is private: your daily log, routine completion, challenges and milestones, and finishing a challenge drafts a post you can share to your page.",
         more: [{ video: "profile-edit", panel: "profile-edit",
           caption: "Updating your skin profile re-ranks your picks. Edit your page opens an editor beside a live preview of your public page, and Expand shows it exactly as visitors will. Your photos and check-ins stay private unless you add them." }] })}
-      ${feature({ tag: "Search", heading: "11. 56,000+ pooled public reviews across 18,000+ products are searchable by skin type and summarized by AI so that all product information is accessible from one consolidated site.",
+      ${feature({ tag: "Search", heading: "56,000+ pooled public reviews across 18,000+ products are searchable by skin type and summarized by AI so that all product information is accessible from one consolidated site.",
         video: "reviews", panel: "picked", captionW: 682,
         caption: "A daily scraper pulls reviews and star ratings from brand sites into one feed. Each product page summarizes the pros and cons with how often they come up (many, some, a few), then lists reviews from people with your skin type first, each linking back to where it was originally posted." })}
-      ${feature({ tag: "Help / Support", heading: "12. Ask Dew is an AI chatbot that answers with your profile, your shelf and real review data.",
+      ${feature({ tag: "Help / Support", heading: "Ask Dew is an AI chatbot that answers with your profile, your shelf and real review data.",
         video: "askdew", panel: "points",
         caption: "An assistant powered by Claude, grounded in your skin profile, your shelf and Dew’s review summaries. It sits in the bottom corner of every page in the design system’s light blue and opens over the content, so asking never means leaving." })}
     </section>
