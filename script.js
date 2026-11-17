@@ -347,9 +347,8 @@ function dewBodyHTML() {
         ${label("The Opportunity")}
         <div class="dw-box dw-opp" ${bg("opp")}>
           ${char("treat2", 63, 61, " dw-opp__left")}
-          <p class="dx-heading">How might we make every check-in make the next recommendation smarter, for you and for other people with skin like yours?</p>
+          <p class="dx-heading">How can we design a platform where tracking and pooled reviews makes recommendations smarter, for you and for other people with skin like yours?</p>
           ${char("hydrate", 56, 59, " dw-opp__right")}
-          <p class="dw-opp__text">Your weekly results become a review, reviews rank products for people with your skin, Dew picks your routine from those rankings, and you track it. More tracked results make the picks more accurate, and better picks bring new people in to track their own.</p>
         </div>
       </section>
       <section class="dx-stack">
@@ -363,7 +362,7 @@ function dewBodyHTML() {
     <section class="dx-stack dw-section">
       ${label("The Flywheel")}
       <h3 class="dx-heading">Every check-in makes both yours and someone else’s next pick better</h3>
-      <p class="dw-intro">The idea arrived as two separate features: a tracker component and a community/social component. Each half is weak on its own, where trackers lose people once the novelty wears off, and review sites are full of strangers. Joined together, each check-in becomes evidence for someone like you, and that evidence is what makes the next pick worth trusting.</p>
+      <p class="dw-intro">Dew is composed of two main features: a tracker component and a community/social component. Each half is weak on its own, where trackers lose people once the novelty wears off, and review sites are full of strangers — but joined together, each check-in becomes evidence for someone with skin like you, and that evidence is what makes the next pick worth trusting.</p>
       <div class="dw-flywheel" ${bg("flywheel")}>
         <img class="dw-flywheel__diagram" src="${V2}flywheel.svg" width="518" height="369" alt="A loop: track your skin, results become a review, reviews rank products for people like you, Dew picks your routine, and back to tracking. In the middle: more data, better picks.">
         <p class="dw-flywheel__text">Every check-in is a data point for the people who share your skin. More tracked results make the rankings more accurate, and better picks bring new people in to track their own.</p>
@@ -389,41 +388,36 @@ function dewBodyHTML() {
     </section>
 
     <section class="dw-features">
-      ${feature({ tag: "Setting up", heading: "1. A 4-step profile setup builds your match pool before you see a single product.",
+      ${feature({ tag: "Setting up", heading: "A four-step profile setup builds your match pool before you see a single product.",
         video: "onboarding", panel: "onboarding",
-        caption: "Create an account, then four quick steps: your skin, where and how you live (Dew looks up your city’s humidity and UV), your goals and budget, and the products already on your shelf. Each layer narrows the pool, so the profile feels like it is working for you." })}
-      ${feature({ tag: "Tracking &amp; Ordering", heading: "2. Weekly check-ins for users to consistently log their progress is what feeds the recommendation model.",
-        video: "checkin", panel: "checkin", captionW: 462,
-        caption: "The weekly check-in opens over Explore: your skin overall, each product you are using, and, only at a product’s results week, Buy or Don’t buy. It takes about two minutes, and every answer re-ranks your shelf and your picks." })}
-      ${feature({ heading: "3. Tracking is the retention engine that rewards users with samples and discounts.",
-        video: "points", panel: "points", captionW: 752,
-        caption: "Dew is as much a retention product as a discovery one. The picks only get sharper if people keep logging after the first bottle. So the routine tracker is a game. Almost every point comes from tracking, not spending, and points buy the one thing that makes trying a new product less risky: a free box of travel-size minis.",
+        caption: "Each layer narrows your match pool so that recommendations will be more tailored." })}
+      ${feature({ tag: "Tracking &amp; Ordering", heading: "Weekly check-ins for users to consistently log their progress is what feeds the recommendation model.",
+        video: "checkin", panel: "onboarding", captionW: 790,
+        caption: "A 2-minute check-in in 3 parts: your skin overall, each product you are using, and, only at a product’s results week, Buy or Don’t buy. It takes about two minutes, and every answer re-ranks your shelf and your picks." })}
+      ${feature({ heading: "Tracking is the retention engine that rewards users with samples and discounts.",
+        video: "points", panel: "points", captionW: 756,
+        caption: "Dew is as much a retention product as a discovery one. The picks only get sharper if people keep logging after the first bottle. So the routine tracker is a game. Almost every point comes from tracking, not spending, and points can buy a less-risky free box of travel-size minis.",
         extra: cards([
           "Reward the habit, not the purchase: the fastest way to a reward is to keep logging.",
           "Points take the risk out of trying and smaller samples make it easier to try something new.",
           "Every sample ends in a verdict at certain milestones: Is this really working?",
           "Streaks, challenges, and a points-to-go bar on your profile keep the next reward in view.",
         ]) })}
-      ${feature({ heading: "4. Reorder what works, and replace what doesn’t.",
-        video: "refill", panel: "refill",
+      ${feature({ heading: "Reorder what works, and replace what doesn't.",
+        video: "refill", panel: "onboarding", captionW: 790,
         caption: "The moment a user runs out of product is when they are most likely to drift to a different store or a different routine. Dew uses your skincare logs to see it coming. It estimates when each product will run out, and your own check-ins decide what happens next, giving you the option to refill what is working, or swap out what isn’t with another product that people like you rate highest for that step of the routine." })}
-      ${feature({ tag: "Personalization", heading: "5. Picked For You is a personalized skincare bundle that addresses decision paralysis directly.",
-        video: "picked", panel: "picked", captionW: 492,
+      ${feature({ tag: "Personalization", heading: "Picked For You is a personalized skincare bundle that addresses decision paralysis directly.",
+        video: "picked", panel: "picked",
         caption: "Dew keeps what already works on your shelf, fills only the gaps, and shows the share of matched people who say Buy and how many weeks results took. Try it full size, or sample the same products as minis first." })}
-      ${feature({ heading: "6. Create routines based on the real, effective routines of their friends or creators they follow so that starting a new routine doesn’t mean starting from scratch.",
-        video: "routines", panel: "checkin", captionW: 752,
-        caption: "Routines for you has three ways in: Dew’s pick, a routine from someone you follow, or one built from your Want To Try list. Pick a goal and you see what worked for friends and creators with skin like yours: their weekly check-ins, when they added each product and what they’d change. “Make it mine” merges their routine with your shelf, so you only buy the steps you’re missing.",
-        extra: cards([
-          "Pick a goal and see the most common routine among the people you follow, and how many kept it.",
-          "Open one person’s routine: their check-ins week by week, including the weeks that got worse.",
-          "Make it yours: what you already have, what’s close enough, and only the gap goes in your box.",
-        ]) })}
-      ${feature({ heading: "7. As you browse reviews and save products to your Want To Try list, Dew creates a routine based off of these products that would go together.",
-        video: "wanttotry", panel: "picked", captionW: 752,
+      ${feature({ heading: "Create routines based on real, effective routines of people you trust so starting over isn’t as daunting.",
+        video: "routines", panel: "onboarding", captionW: 538,
+        caption: "Pick a skincare goal to see what worked for friends or creators you follow with skin like yours. Dew will formulate a routine for you based on the routine you wish to follow." })}
+      ${feature({ heading: "As you browse reviews and save products to your Want To Try list, Dew creates a routine based off of these products that would go together.",
+        video: "wanttotry", panel: "wanttotry", captionW: 784,
         caption: "Dew picks one saved product per routine step, the one people with your skin rate highest, and leaves out extras or doubles. Swap any step for something else you saved, then buy the routine full size or sample it as minis with points." })}
-      ${feature({ tag: "Social", heading: "8. Your skin community feed consists of peer and creator reviews.",
+      ${feature({ tag: "Social", heading: "Your skin community feed consists of peer and creator reviews.",
         video: "community", panel: "community",
-        caption: "The People tab is one feed of reviews from friends, creators and members with skin like yours, filterable to Everyone, Friends or Creators. Mark a review helpful, reply to it, or save the product to your Want To Try list. It is where you follow people whose skin is like yours, see what is in their routines, and learn from what worked and what didn’t. It is also there for something product pages can’t give: for acne, rosacea and other conditions that carry stigma, seeing someone with your skin share their progress week by week is a reminder that you are not alone." })}
+        caption: "Creators and Community are one People tab: a single feed of friends, creators and members with skin like yours, plus a Find people like you page, and you can compare your shelf with anyone’s to save or buy what they use that you don’t. It is where you follow people whose skin is like yours, see what is in their routines, and learn from what worked and what didn’t. It is also there for something product pages can’t give: for acne, rosacea and other conditions that carry stigma, seeing someone with your skin share their progress week by week is a reminder that you are not alone." })}
       ${feature({ heading: "9. Follow creators and friends whose skin profile matches yours, and shop their shelves by comparing them to yours.",
         video: "creators", panel: "creators",
         caption: "People already pick skincare by watching creators, but a creator’s routine is scattered across videos, captions and affiliate links. A creator page puts all of it in one place, like a link in bio for skincare: every product they use, ranked by them. Creators are then matched to you on skin type, climate and age (the similarity score). Every page has a Diary of their check-ins and a Compare shelves button that shows what they use that you don’t, ready to save or add to your cart.",
@@ -433,15 +427,15 @@ function dewBodyHTML() {
           "For brands to be discoverable and partnerships to continue past the affiliate program.",
         ]) })}
       ${feature({ heading: "10. Your profile tracks your progress and you can edit your page that is shown to the public.",
-        video: "profile", panel: "points", captionW: 752,
+        video: "profile", panel: "onboarding",
         caption: "My page is what other people see: your products, a diary of your journey and your reviews. My progress is private: your daily log, routine completion, challenges and milestones, and finishing a challenge drafts a post you can share to your page.",
-        more: [{ video: "profile-edit", panel: "onboarding", captionW: 752,
-          caption: "Moved, or changed your diet? Updating your skin profile re-ranks your picks. Edit your page opens an editor beside a live preview of your public page, and Expand shows it exactly as visitors will. Your photos and check-ins stay private unless you add them." }] })}
-      ${feature({ tag: "Search", heading: "11. <b>56,000+</b> pooled public reviews across <b>18,000+</b> products are searchable by skin type and summarized by AI so that all product information is accessible from one consolidated site.",
-        video: "reviews", panel: "reviews", captionW: 682,
+        more: [{ video: "profile-edit", panel: "profile-edit",
+          caption: "Updating your skin profile re-ranks your picks. Edit your page opens an editor beside a live preview of your public page, and Expand shows it exactly as visitors will. Your photos and check-ins stay private unless you add them." }] })}
+      ${feature({ tag: "Search", heading: "11. 56,000+ pooled public reviews across 18,000+ products are searchable by skin type and summarized by AI so that all product information is accessible from one consolidated site.",
+        video: "reviews", panel: "picked", captionW: 682,
         caption: "A daily scraper pulls reviews and star ratings from brand sites into one feed. Each product page summarizes the pros and cons with how often they come up (many, some, a few), then lists reviews from people with your skin type first, each linking back to where it was originally posted." })}
       ${feature({ tag: "Help / Support", heading: "12. Ask Dew is an AI chatbot that answers with your profile, your shelf and real review data.",
-        video: "askdew", panel: "askdew",
+        video: "askdew", panel: "points",
         caption: "An assistant powered by Claude, grounded in your skin profile, your shelf and Dew’s review summaries. It sits in the bottom corner of every page in the design system’s light blue and opens over the content, so asking never means leaving." })}
     </section>
 
@@ -449,18 +443,26 @@ function dewBodyHTML() {
 
     <section class="dx-stack dw-section">
       ${label("Information Architecture")}
-      <h3 class="dx-heading">Dew’s information architecture is built on four tabs and a skincare bathroom shelf as the through line.</h3>
-      <p class="dw-intro">The first run is a straight-line 1/ sign up, 2/ build a four-step profile, and 3/ see your match pool. After that the structure stays flat.<br>4 tabs hold everything the user can browse (in Hi-fi v8, Creators and Community became one People tab), while the shelf panel and Ask Dew stay on every page, so tracking and chatting never means navigating away.</p>
+      <h3 class="dx-heading">Dew’s information architecture is built on five tabs and a skincare bathroom shelf as the through line.</h3>
+      <p class="dw-intro">The first run is a straight-line 1/ sign up, 2/ build a four-step profile, and 3/ see your match pool. After that the structure stays flat.<br>5 tabs hold everything the user can browse, while the shelf panel and Ask Dew stay on every page, so tracking and chatting never means navigating away.</p>
       <div class="dw-ia2"><img src="${V2}ia.png" width="3330" height="1176" alt="Dew site map: Welcome, Skin profile, Explore, People (friends, creators and members in one tab), Public reviews, Picked for you (picked by Dew or from people like you), Check-in, Cart, Search and Profile, each with its pages and flows" loading="lazy" decoding="async"></div>
     </section>
 
     <hr class="dx-rule">
 
     <section class="dx-stack dw-section">
+      ${label("Exploration")}
+      <h3 class="dx-heading">Before landing on the final layout, I explored three other directions of how to best organize the user flow.</h3>
+      <p class="dw-intro">The first run is a straight-line 1/ sign up, 2/ build a four-step profile, and 3/ see your match pool. After that the structure stays flat.<br>5 tabs hold everything the user can browse, while the shelf panel and Ask Dew stay on every page, so tracking and chatting never means navigating away.</p>
+    </section>
+
+    <hr class="dx-rule">
+
+    <section class="dx-stack dw-section">
       ${label("Design System")}
-      <h3 class="dx-heading">A lightweight design system informs all brand and component decisions.</h3>
+      <h3 class="dx-heading">In parallel with wireframing, I built a lightweight design system that governs all brand and component decisions.</h3>
       <p class="dw-intro">Every color, size and corner in the Dew Figma file is a variable, and the same values are CSS variables on the live site, so one change updates every screen.</p>
-      <div class="dw-ds2"><img src="${V2}ds.png" width="2220" height="8981" alt="The Dew design system: foundations (color, typography, spacing, radius and elevation, layout, iconography and imagery, accessibility), components and patterns, including the Hi-fi v8 patterns: kind tag, diary entry, compare shelves, people you follow, why this, peer routine card, live preview editor and share a moment" loading="lazy" decoding="async"></div>
+      <div class="dw-ds2"><img src="${V2}ds.png" width="2220" height="8562" alt="The Dew design system: foundations (color, typography, spacing, radius and elevation, layout, iconography and imagery, accessibility), components (buttons, chips, step bars, cards, inputs) and patterns, including the product panel, profile header, kind tag, diary entry, compare shelves and share a moment" loading="lazy" decoding="async"></div>
     </section>`;
 }
 
