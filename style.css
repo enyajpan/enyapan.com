@@ -1136,11 +1136,11 @@ img.is-preview { background: center / cover no-repeat; } /* the tiny copy (set i
 }
 .dw-screen {
   display: block;
-  width: 100%;
+  width: min(100%, calc(800 * var(--s))); /* Figma: 800 wide, centered in the 1110 panel */
   height: auto;
   aspect-ratio: 1440 / 900;
   object-fit: cover;
-  border-radius: calc(6 * var(--s));
+  border-radius: calc(10 * var(--s));
   box-shadow: 0 calc(10 * var(--s)) calc(28 * var(--s)) rgba(20, 28, 17, 0.14);
   background: #fff;
   pointer-events: none;
